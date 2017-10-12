@@ -14,6 +14,11 @@ from keras.layers.advanced_activations import ELU
 from keras.layers.recurrent import GRU
 from keras.utils.data_utils import get_file
 
+DIGITAL7_API_KEY = ''
+try:
+    DIGITAL7_API_KEY = os.environ['DIGITAL7_API_KEY']
+except KeyError:
+    DIGITAL7_API_KEY = None
 
 tags_path = os.path.dirname(os.path.abspath(__file__))
 ser_data_path = 'dataset.dat'
@@ -103,9 +108,24 @@ class Serializer:
 
 
 def download_raw_audio_batch(data):
-    # TODO: check how to download
-    pass
+    audio_batch = {}
 
+    for trackid in data:
+        url = 'http://api.7digital.com/1.2/track/preview?redirect=false'
+        url += '&trackid=' + str(trackid)
+        url += '&oauth_consumer_key=' + DIGITAL7_API_KEY
+        xmldoc = url_call(url)
+        status = xmldoc.getAttribute('status')
+        if status != 'ok':
+            return ''
+        url_element = xmldoc.getElementsByTagName('url')[0]
+        preview = url_element.firstChild.nodeValue
+        print (preview)
+
+        # TODO: get audio here
+        audio_batch[trackid] = ''
+
+    return audio_batch
 
 def generate_spectrograms(serializer, ofile=spectrs_path):
     while True:
