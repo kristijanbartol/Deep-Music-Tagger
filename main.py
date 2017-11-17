@@ -4,15 +4,16 @@ import json
 import librosa
 
 from keras import backend as K
-from keras.layers import Input, Dense
+from keras.layers import Input
 from keras.models import Model
-from keras.layers import Dense, Dropout, Reshape, Permute
+from keras.layers import Dense, Dropout, Reshape
 from keras.layers.convolutional import Convolution2D
 from keras.layers.convolutional import MaxPooling2D, ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import ELU
 from keras.layers.recurrent import GRU
-from keras.utils.data_utils import get_file
+
+from utility import Logger
 
 DIGITAL7_API_KEY = ''
 try:
@@ -20,24 +21,12 @@ try:
 except KeyError:
     DIGITAL7_API_KEY = None
 
+# downloaded song tags dataset files path (https://labrosa.ee.columbia.edu/millionsong/lastfm)
 tags_path = os.path.dirname(os.path.abspath(__file__))
+# serialized tags output file path
 ser_data_path = 'dataset.dat'
-spectrs_path = 'spectrograms.dat'
-
-
-class Logger:
-
-    Header = '\033[95m'
-    Success = '\033[92m'
-    Info = '\033[94m'
-    Warning = '\033[93m'
-    Error = '\033[91m'
-    Bold = '\033[1m'
-    Underline = '\033[4m'
-    ENDC = '\033[0m'
-
-    def log(self, type, msg):
-        print (type + msg + self.ENDC)
+# generated spectrograms output file path
+spectrograms_path = 'spectrograms.dat'
 
 
 class Serializer:
@@ -57,6 +46,7 @@ class Serializer:
         with open('params.conf', 'w') as f_params:
             json.dump(params, f_params)
 
+    @staticmethod
     def load_params(self):
         return json.load('params.conf')
 
@@ -127,7 +117,8 @@ def download_raw_audio_batch(data):
 
     return audio_batch
 
-def generate_spectrograms(serializer, ofile=spectrs_path):
+
+def generate_spectrograms(serializer, ofile=spectrograms_path):
     while True:
         spectr_grams = {}
         data, status = serializer.load_batch()
@@ -150,16 +141,19 @@ else:
     logger.log(logger.Info, 'Found generated dataset file. If you want to regenerate new, remove the file manually.')
 
 # NOTE: you will never actually save raw audio; convert it to spectrograms right away to preserve GBs of disk space
-if not os.path.isfile(spectrs_path):
+if not os.path.isfile(spectrograms_path):
     generate_spectrograms(serializer)
+
+if '__name__' == '__main__()':
+    # TODO: test fetching single .mp3
+    pass
 
 # -------------------------------------------------------------------------------------------------------------- #
 
-TH_WEIGHTS_PATH = 'https://github.com/keunwoochoi/music-auto_tagging-keras/blob/master/data/music_tagger_crnn_weights_theano.h5'
 TF_WEIGHTS_PATH = 'https://github.com/keunwoochoi/music-auto_tagging-keras/blob/master/data/music_tagger_crnn_weights_tensorflow.h5'
 
 
-def MusicTaggerCRNN(weights='msd', input_tensor=None,
+def build_keras_model(weights='msd', input_tensor=None,
                     include_top=True):
     '''Instantiate the MusicTaggerCRNN architecture,
     optionally loading weights pre-trained
@@ -191,11 +185,7 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None,
                          '`None` (random initialization) or `msd` '
                          '(pre-training on Million Song Dataset).')
 
-    # Determine proper input shape
-    if K.image_dim_ordering() == 'th':
-        input_shape = (1, 96, 1366)
-    else:
-        input_shape = (96, 1366, 1)
+    input_shape = (96, 1366, 1)
 
     if input_tensor is None:
         melgram_input = Input(shape=input_shape)
@@ -205,15 +195,8 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None,
         else:
             melgram_input = input_tensor
 
-    # Determine input axis
-    if K.image_dim_ordering() == 'th':
-        channel_axis = 1
-        freq_axis = 2
-        time_axis = 3
-    else:
-        channel_axis = 3
-        freq_axis = 1
-        time_axis = 2
+    channel_axis = 3
+    freq_axis = 1
 
     # Input block
     x = ZeroPadding2D(padding=(0, 37))(melgram_input)
@@ -247,9 +230,6 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None,
     x = MaxPooling2D(pool_size=(4, 4), strides=(4, 4), name='pool4')(x)
     x = Dropout(0.1, name='dropout4')(x)
 
-    # reshaping
-    if K.image_dim_ordering() == 'th':
-        x = Permute((3, 1, 2))(x)
     x = Reshape((15, 128))(x)
 
     # GRU block 1, 2, output
@@ -260,15 +240,4 @@ def MusicTaggerCRNN(weights='msd', input_tensor=None,
         x = Dense(50, activation='sigmoid', name='output')(x)
 
     # Create model
-    model = Model(melgram_input, x)
-    if weights is None:
-        return model
-    else:
-        # Load input
-        if K.image_dim_ordering() == 'tf':
-            raise RuntimeError("Please set image_dim_ordering == 'th'."
-                               "You can set it at ~/.keras/keras.json")
-
-        model.load_weights('data/music_tagger_crnn_weights_%s.h5' % K._BACKEND,
-                           by_name=True)
-        return model
+    return Model(melgram_input, x)
