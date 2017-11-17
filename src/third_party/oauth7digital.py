@@ -1,7 +1,8 @@
 import re
 
-import api_settings
 import oauth2 as oauth
+
+import api_settings
 
 SERVER = 'api.7digital.com'
 API_VERSION = '1.2'
@@ -96,7 +97,7 @@ def signed_request(url, access_token=None):
                 consumer,
                 http_url=url,
                 is_form_encoded=True,
-                parameters={'country':api_settings.country})
+                parameters={'country': api_settings.country})
 
     signing_method = oauth.SignatureMethod_HMAC_SHA1()
     req.sign_request(signing_method, consumer, access_token)

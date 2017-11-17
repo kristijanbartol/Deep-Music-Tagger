@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
-import sys
 import os
+import sys
 import urllib
-import py7d
+
 import hdf5_getters
+import py7d
+
 
 def die_with_usage():
     """ HELP MENU """

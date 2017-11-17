@@ -1,11 +1,12 @@
-import httplib2
+import collections
 import os
 import urllib
-import xmltodict
-import collections
 
-import oauth7digital as oa7D
+import httplib2
+import xmltodict
+
 import api_settings
+import oauth7digital as oa7D
 
 __name__ = 'py7D'
 __doc__ = 'A lightweight python interface to 7Digital web service'
@@ -51,8 +52,8 @@ def _assemble_url(host, method, function, oauth, **kwargs):
 
     if not oauth:
         url = "%s%s" % (url, '?oauth_consumer_key=%s&country=%s' % (
-                                                        api_settings.oauthkey,
-                                                        api_settings.country)
+            api_settings.oauthkey,
+            api_settings.country)
                        )
     if data:
         url += "&%s" % data

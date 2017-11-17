@@ -1,19 +1,19 @@
+import json
 import marshal
 import os
-import json
-import librosa
 
+import librosa
 from keras import backend as K
-from keras.layers import Input
-from keras.models import Model
 from keras.layers import Dense, Dropout, Reshape
+from keras.layers import Input
+from keras.layers.advanced_activations import ELU
 from keras.layers.convolutional import Convolution2D
 from keras.layers.convolutional import MaxPooling2D, ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import ELU
 from keras.layers.recurrent import GRU
+from keras.models import Model
 
-from utility import Logger
+from src.utility import Logger
 
 DIGITAL7_API_KEY = ''
 try:
