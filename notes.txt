@@ -1,0 +1,6 @@
+- define multi-output problem as following:
+  -> create output label vectors so that assigned tags have decremental values based on number of assignments, i.e. gradually decrease values to each lower positioned tag
+  -> predict probabilities that the song belongs to each of the (sub)set(*) of possible tags
+  -> instead of taking just one value with highest probability, we take $k$ values, where $k$ is the number of originally given labels
+
+(*) as the number of all tags is too high to be taken as the number of output classes, you could preprocess tags and assign similarities based on number of common occurences with some threshold $p$
