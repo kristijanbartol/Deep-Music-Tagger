@@ -6,3 +6,11 @@
 (*) as the number of all tags is too high to be taken as the number of output classes, you could preprocess tags and assign similarities based on number of common occurences with some threshold $p$
 
 - adjust all music samples to be more or less on the same volume level to prevent the model from learning it as a feature
+
+- try removing voice from songs and check how does it affect classification accuracy
+
+- if using 30s pieces turns out to have almost exact accuracy as full-length songs, try expanding the dataset by removing voice from songs that contain voice parts and serve these other parts of the songs as different samples with the same labels, of course (kick out instrumental?)
+	-> anyways try different techniques to expand the dataset!
+
+- try putting raw audio as input -> 1D convolution (may be helpful for generator - WaveNet)
+
