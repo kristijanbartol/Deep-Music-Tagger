@@ -10,6 +10,10 @@ Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma)
 
 ## Relevant literature
 
-[Downie, Music Information Retrival](http://www.music.mcgill.ca/~ich/classes/mumt611_08/downie_mir_arist37.pdf)
+[CRNN for Music Classification](https://arxiv.org/abs/1609.04243)
+
+[FMA: A Dataset For Music Analysis](https://arxiv.org/abs/1612.01840)
+
+[Music Information Retrival (MIR, Downie)](http://www.music.mcgill.ca/~ich/classes/mumt611_08/downie_mir_arist37.pdf)
 
 [A Tutorial on Deep Learning for Music Information Retrieval](https://arxiv.org/pdf/1709.04396.pdf)
