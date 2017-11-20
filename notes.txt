@@ -19,4 +19,5 @@
 - create "informal" dataset to compare results with FMA
 
 - feed network with more than just mel-spectrogram images?
+	-> Q: how much information does mel-spectrogram contain (do faster songs end up not being converted with enough details?)?
 
