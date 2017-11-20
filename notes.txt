@@ -14,3 +14,9 @@
 
 - try putting raw audio as input -> 1D convolution (may be helpful for generator - WaveNet)
 
+- define distance measure (or similarity measure) between songs / groups
+
+- create "informal" dataset to compare results with FMA
+
+- feed network with more than just mel-spectrogram images?
+
