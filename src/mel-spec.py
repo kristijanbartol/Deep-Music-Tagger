@@ -9,12 +9,6 @@ import numpy as np
 import warnings
 import os
 
-# Root directory where you downloaded FMA dataset with .mp3s
-rootdir = '/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium'
-
-# Surpress UserWarnings from matplotlib; they occur as we are saving only plots' content, not axes and borders
-warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
-
 
 def generate_plot(fname, log_S, sr):
     fig = plt.figure(frameon=False)
@@ -28,7 +22,12 @@ def generate_plot(fname, log_S, sr):
     librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
     plt.tight_layout()
 
-    fig.savefig('../out/mel-specs/{}'.format(fname.replace('.mp3', '.png')), bbox_inches='tight')
+    spec_fpath = '../out/mel-specs/{}'
+    spec_fname = fname.replace('.mp3', '.png')
+
+    print('Saving spectrogram in {}'.format(spec_fpath.format(spec_fname)))
+    fig.savefig(spec_fpath.format(spec_fname))
+    plt.close()
 
 
 def extract_melspec(audio_fpath, audio_fname):
@@ -44,19 +43,26 @@ def extract_melspec(audio_fpath, audio_fname):
     generate_plot(audio_fname, log_S, sr)
 
 
-i = 0
-nfiles = sum([len(files) for r, d, files in os.walk(rootdir)])
+if __name__ == '__main__':
+    # Root directory where you downloaded FMA dataset with .mp3s
+    rootdir = '/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium'
 
-print('Extracting mel-spectrograms from raw data root directory...')
-for subdir, dirs, files in os.walk(rootdir):
-    for file in files:
-        if file.lower().endswith('.mp3'):
-            fpath = os.path.join(subdir, file)
-            print('{0}........................................................{1:.2f}%'.format(fpath, i / nfiles * 100))
-            extract_melspec(fpath, file)
-            i += 1
-            if i == 100:
-                # Generate a 100 samples for testing purposes; they still need to be labeled
-                exit(0)
-        else:
-            continue
+    # Surpress UserWarnings from matplotlib; they occur as we are saving only plots' content, not axes and borders
+    warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
+
+    i = 0
+    nfiles = sum([len(files) for r, d, files in os.walk(rootdir)])
+
+    print('Extracting mel-spectrograms from raw data root directory...')
+    for subdir, dirs, files in os.walk(rootdir):
+        for file in files:
+            if file.lower().endswith('.mp3'):
+                fpath = os.path.join(subdir, file)
+                print('{0} (extracting)..................{1}/{2} ({3:.2f}%)'.format(fpath, i, nfiles, i / nfiles * 100))
+                extract_melspec(fpath, file)
+                i += 1
+                if i == 100:
+                    # Generate a 100 samples for testing purposes; they still need to be labeled
+                    exit(0)
+            else:
+                continue
