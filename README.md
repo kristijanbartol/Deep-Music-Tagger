@@ -6,7 +6,7 @@ Project mostly based on [Dec 2016.] [Convolutional Recurrent Neural Networks for
 
 ## Input features
 
-[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/mel-spec.png)
+[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/plot.png)
 
 However, when generating images for out network, we save only the content inside a plot (and it takes a while):
 ```
