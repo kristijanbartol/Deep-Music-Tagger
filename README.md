@@ -53,3 +53,4 @@ Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma)
 
 [6] [End-to-end learning for music audio tagging at scale (1D convolution)](https://arxiv.org/pdf/1711.02520.pdf)
 
+For broader references on music information retrieval, check https://github.com/ybayle/awesome-deep-learning-music.
