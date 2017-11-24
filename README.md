@@ -1,5 +1,9 @@
 # Deep Music Classifier
 
+## Note
+
+Beware that this is project is **in progress**, but is regurarly updated. If you urge to get some information, please feel free to contact me on *kristijan.bartol@gmail.com* or *kb47186@fer.hr*.
+
 ## About
 
 The ideal goal of this project is to be able to say "This part of the song has the elements of jazz, progressive rock and a bit of grunge.". This could be possible to achieve defining the problem as multi-output classification.
