@@ -1,3 +1,5 @@
+- ideal goal: be able to say "in this part of the song there are elements of jazz, prog rock and a bit of grunge" :)
+
 - define multi-output problem as following:
   -> create output label vectors so that assigned tags have decremental values based on number of assignments, i.e. gradually decrease values to each lower positioned tag
   -> predict probabilities that the song belongs to each of the (sub)set(*) of possible tags
