@@ -6,6 +6,17 @@ The ideal goal of this project is to be able to say "This part of the song has t
 
 Deep model is based on [Dec 2016.] [Convolutional Recurrent Neural Networks for Music Classification](https://arxiv.org/abs/1609.04243) (Keunwoo Choi, George Fazekas, Mark Sandler, Kyunghyun Cho) [1], i.e. using convolutional recurrent neural network deep model for multi-output classification task (tagging each music piece using a subset of labels).
 
+## Prerequisite
+
+To be able to run all parts of this project, you will need the following additional Python packages (recommended is Python 3.6):
+
+- **keras** - build and train the high-level model
+- **librosa** - extract mel-spectrograms
+- **pandas** - analyze FMA metadata
+- **numpy** - efficiently work with linear algebra operations
+- **tensorflow** (GPU recommended) - modify keras backend
+- **matplotlib** - plot various graphs and use it extract librosa spectrograms
+
 ## Input features
 
 [Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/plot.png)
