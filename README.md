@@ -4,7 +4,7 @@
 
 The ideal goal of this project is to be able to say "This part of the song has the elements of jazz, progressive rock and a bit of grunge.". This could be possible to achieve defining the problem as multi-output classification.
 
-Deep model is based on [Dec 2016.] [Convolutional Recurrent Neural Networks for Music Classification](https://arxiv.org/abs/1609.04243) (Keunwoo Choi, George Fazekas, Mark Sandler, Kyunghyun Cho), i.e. using convolutional recurrent neural network deep model for multi-output classification task (tagging each music piece using a subset of labels).
+Deep model is based on [Dec 2016.] [Convolutional Recurrent Neural Networks for Music Classification](https://arxiv.org/abs/1609.04243) (Keunwoo Choi, George Fazekas, Mark Sandler, Kyunghyun Cho) [1], i.e. using convolutional recurrent neural network deep model for multi-output classification task (tagging each music piece using a subset of labels).
 
 ## Input features
 
@@ -29,9 +29,11 @@ Saving spectrogram in ../out/mel-specs/106630.png
 (...)
 ```
 
+However, other spectrograms could also be used as described and compared in detail in [5]. In this work, except mel-spectrograms, raw audio input will also be tested [6].
+
 ## Data
 
-Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma). It is a collection of freely available MP3s (under Creative Commons license) most convenient for research projects and (currently) only publicly available music dataset of a kind.
+Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma) [2]. It is a collection of freely available MP3s (under Creative Commons license) most convenient for research projects and (currently) only publicly available music dataset of a kind.
 
 ## Usage
 
@@ -39,11 +41,15 @@ Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma)
 
 ## Relevant literature
 
-[CRNN for Music Classification](https://arxiv.org/abs/1609.04243)
+[1] [CRNN for Music Classification](https://arxiv.org/abs/1609.04243)
 
-[FMA: A Dataset For Music Analysis](https://arxiv.org/abs/1612.01840)
+[2] [FMA: A Dataset For Music Analysis](https://arxiv.org/abs/1612.01840)
 
-[Music Information Retrival (MIR, Downie)](http://www.music.mcgill.ca/~ich/classes/mumt611_08/downie_mir_arist37.pdf)
+[3] [Music Information Retrival (origin of "MIR", Downie)](http://www.music.mcgill.ca/~ich/classes/mumt611_08/downie_mir_arist37.pdf)
 
-[A Tutorial on Deep Learning for Music Information Retrieval](https://arxiv.org/pdf/1709.04396.pdf)
+[4] [A Tutorial on Deep Learning for Music Information Retrieval](https://arxiv.org/pdf/1709.04396.pdf)
+
+[5] [Comparison on Audio Signal Preprocessing Methods for Deep Neural Networks on Music Tagging](https://arxiv.org/pdf/1709.01922.pdf)
+
+[6] [End-to-end learning for music audio tagging at scale (1D convolution)](https://arxiv.org/pdf/1711.02520.pdf)
 
