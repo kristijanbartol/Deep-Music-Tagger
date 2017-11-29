@@ -54,19 +54,18 @@ Genres (in full dataset) distribution is shown in the following histogram: ![Gen
 
 ## Usage
 
-First take a look at [FMA dataset metadata](https://os.unil.cloud.switch.ch/fma/fma_metadata.zip) (342 MiB). For more details, check [this repo](https://github.com/mdeff/fma).
+1. take a look at and download [FMA dataset metadata](https://os.unil.cloud.switch.ch/fma/fma_metadata.zip) (342 MiB). For more details, check [this repo](https://github.com/mdeff/fma).
 
-Then download [small](https://os.unil.cloud.switch.ch/fma/fma_small.zip) or [medium](https://os.unil.cloud.switch.ch/fma/fma_medium.zip); try with smaller versions first to set things up and then switch to [large](https://os.unil.cloud.switch.ch/fma/fma_large.zip). I won't use [full](https://os.unil.cloud.switch.ch/fma/fma_full.zip) version as input images then have various sizes and it's anyways to large for my computing resources plus I believe there is more than enough information in 30s trimmed tracks.
+2. Then download [small](https://os.unil.cloud.switch.ch/fma/fma_small.zip) or [medium](https://os.unil.cloud.switch.ch/fma/fma_medium.zip); try with smaller versions first to set things up and then switch to [large](https://os.unil.cloud.switch.ch/fma/fma_large.zip). I won't use [full](https://os.unil.cloud.switch.ch/fma/fma_full.zip) version as input images then have various sizes and it's anyways to large for my computing resources plus I believe there is more than enough information in 30s trimmed tracks.
 
-Extract mel-spectrograms from mp3s running ![mel-spec.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/mel-spec.py) as main module.
+3. Extract mel-spectrograms from mp3s running ![mel-spec.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/mel-spec.py) as main module.
 
-Generate relevant metadata running ![metadata.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/metadata.py) as main module.
+4. Generate relevant metadata running ![metadata.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/metadata.py) as main module.
 
-(...)
+5. 
 
 Project structure:
 
-.
 * data/
 	* fma_{size}/
 		* 000/
