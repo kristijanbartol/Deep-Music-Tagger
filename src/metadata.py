@@ -2,8 +2,8 @@ import pandas as pd
 import sys
 
 fdata_template = '../data/fma_metadata/{}'
-outdir_template = '../out/{}'
-graphs_template = outdir_template.format('graphs/{}')
+modeldata_template = '../out/model_dataset/{}'
+graphs_template = '../out/graphs/{}'
 
 genres_fpath = fdata_template.format('genres.csv')
 tracks_fpath = fdata_template.format('tracks.csv')
@@ -71,4 +71,15 @@ if __name__ == '__main__':
             genre_id = genres_df.loc[genres_df['title'] == row[1]]['genre_id'].iloc[0]
         new_df.loc[idx, 'genre_top'] = genre_id
 
-    new_df.to_csv(outdir_template.format('data.csv'), encoding='utf-8')
+    new_df = new_df.drop('subset', 1)
+
+    train_df = new_df[new_df.split == 'training']
+    train_df = train_df.drop('split', 1)
+    valid_df = new_df[new_df.split == 'validation']
+    valid_df = valid_df.drop('split', 1)
+    test_df = new_df[new_df.split == 'test']
+    test_df = test_df.drop('split', 1)
+
+    train_df.to_csv(modeldata_template.format('train.csv'), encoding='utf-8')
+    valid_df.to_csv(modeldata_template.format('valid.csv'), encoding='utf-8')
+    test_df.to_csv(modeldata_template.format('test.csv'), encoding='utf-8')

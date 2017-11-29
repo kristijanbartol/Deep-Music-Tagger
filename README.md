@@ -23,7 +23,7 @@ To be able to run all parts of this project, you will need the following additio
 
 ## Input features
 
-[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/plot.png)
+[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/plot.png)
 
 However, when generating images for out network, we save only the content inside a plot (and it takes a while):
 ```
