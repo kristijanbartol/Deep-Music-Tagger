@@ -1,9 +1,9 @@
 - ideal goal: be able to say "in this part of the song there are elements of jazz, prog rock and a bit of grunge" :)
 
 - define multi-output problem as following:
-  -> create output label vectors so that assigned tags have decremental values based on number of assignments, i.e. gradually decrease values to each lower positioned tag
-  -> predict probabilities that the song belongs to each of the (sub)set(*) of possible tags
-  -> instead of taking just one value with highest probability, we take $k$ values, where $k$ is the number of originally given labels
+	-> first train with a single output (one-hot; take the information from genre_top column)
+	-> do not train it perfectly with a single label; transform a problem into multi-output by replacing one-hot vector with 1/number_of_genres values on each vector element
+	-> TEST: take top $k$ (real number of genres) values from output vector
 
 (*) as the number of all tags is too high to be taken as the number of output classes, you could preprocess tags and assign similarities based on number of common occurences with some threshold $p$
 

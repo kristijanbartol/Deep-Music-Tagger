@@ -45,7 +45,7 @@ def extract_melspec(audio_fpath, audio_fname):
 
 if __name__ == '__main__':
     # Root directory where you downloaded FMA dataset with .mp3s
-    rootdir = '/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium'
+    rootdir = '../data/fma_medium'
 
     # Surpress UserWarnings from matplotlib; they occur as we are saving only plots' content, not axes and borders
     warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
