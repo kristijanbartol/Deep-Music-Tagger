@@ -2,7 +2,7 @@
 
 ## Note
 
-Beware that this is project is **in progress**, but is regurarly updated. If you urge to get some information, please feel free to contact me on *kristijan.bartol@gmail.com* or *kb47186@fer.hr*.
+Beware that this is project is **in progress**, but is regurarly updated, as well as this README. If you urge to get some information, please feel free to contact me on *kristijan.bartol@gmail.com* or *kb47186@fer.hr*.
 
 ## About
 
@@ -54,7 +54,35 @@ Genres (in full dataset) distribution is shown in the following histogram: ![Gen
 
 ## Usage
 
-...
+First take a look at [FMA dataset metadata](https://os.unil.cloud.switch.ch/fma/fma_metadata.zip) (342 MiB). For more details, check [this repo](https://github.com/mdeff/fma).
+
+Then download [small](https://os.unil.cloud.switch.ch/fma/fma_small.zip) or [medium](https://os.unil.cloud.switch.ch/fma/fma_medium.zip); try with smaller versions first to set things up and then switch to [large](https://os.unil.cloud.switch.ch/fma/fma_large.zip). I won't use [full](https://os.unil.cloud.switch.ch/fma/fma_full.zip) version as input images then have various sizes and it's anyways to large for my computing resources plus I believe there is more than enough information in 30s trimmed tracks.
+
+Extract mel-spectrograms from mp3s running ![mel-spec.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/mel-spec.py) as main module.
+
+Generate relevant metadata running ![metadata.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/metadata.py) as main module.
+
+(...)
+
+Project structure:
+
+data/
+	fma_{size}/
+		000/
+		001/
+		...
+	fma_metadata/
+		genres.csv
+		tracks.csv
+out/
+	graphs/
+	plot.png
+src/
+	main.py
+	mel-spec.py
+	metadata.py
+	model.py
+	utility.py
 
 ## Relevant literature
 
