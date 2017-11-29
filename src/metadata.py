@@ -2,7 +2,7 @@ import pandas as pd
 import sys
 
 fdata_template = '../data/fma_metadata/{}'
-modeldata_template = '../out/model_dataset/{}'
+modeldata_template = '../in/metadata/{}'
 graphs_template = '../out/graphs/{}'
 
 genres_fpath = fdata_template.format('genres.csv')
@@ -10,6 +10,10 @@ tracks_fpath = fdata_template.format('tracks.csv')
 
 
 class DataSize:
+    """
+    Helper class used to compare string values:
+    'small', 'medium' and 'large' more conveniently.
+    """
 
     SMALL = 'small'
     MEDIUM = 'medium'
@@ -36,14 +40,43 @@ class DataSize:
 data_size = DataSize('medium')
 
 
+def get_data():
+    train_x = ...
+    train_y = ...
+    valid_x = ...
+    valid_y = ...
+    test_x = ...
+    test_y = ...
+    return train_x, train_y, valid_x, valid_y, test_x, test_y
+
+
 def __plot_column_freq(df, index_name):
+    """
+    Plot values' frequencies for given column.
+
+    :param df:
+    :param index_name:
+    :return:
+    """
     ax = df[index_name].value_counts().plot('bar')
     fig = ax.get_figure()
     fig.savefig(graphs_template.format(index_name + '.png'))
 
 
-def __extract_id_from_str_list(s):
-    return int(s[1:-1].replace(' ', '').split(',')[0])      # expected parameter form is '[e1, e2, ..., ei]'
+def __extract_id_from_str_list(ids_string, top_ids):
+    """
+    The idea is to return first top genre that is
+    found in the given list of track genres.
+
+    :param ids_string:
+    :param top_ids:
+    :return:
+    """
+    for id in ids_string[1:-1].replace(' ', '').split(','):
+        # TODO: fill in prioritized values - give more rare ids greater priority (in case there are multiple top genres)
+        if int(id) in top_ids:
+            return int(id)
+    return None
 
 
 if __name__ == '__main__':
@@ -57,6 +90,9 @@ if __name__ == '__main__':
     __plot_column_freq(tracks_df, 'genre_top')
 
     new_df = tracks_df[['track_id', 'genre_top', 'genres_all', 'split', 'subset']].drop(0)  # select relevant columns
+    top_genres = new_df.genre_top.unique()
+    top_genres = [genre for genre in top_genres if type(genre) == str]    # get top genres list without illegal elements
+    top_genre_ids = [genres_df[genres_df['title'] == genre]['genre_id'].iloc[0] for genre in top_genres]  # to genre ids
 
     for idx, row in new_df.iterrows():
         genre_id = -1
@@ -66,15 +102,19 @@ if __name__ == '__main__':
             new_df.drop(idx, inplace=True)
             continue
         if type(row[1]) != str:             # not all values have 'genre_top' value assigned; fill in using 'genres_all'
-            genre_id = __extract_id_from_str_list(row[2])
+            genre_id = __extract_id_from_str_list(row[2], top_genre_ids)
+            if genre_id is None:
+                print('Note: unable to find top genre tag to assign - removing row')
+                new_df.drop(idx, inplace=True)
+                continue
         else:                               # replace genre names with corresponding ids
-            genre_id = genres_df.loc[genres_df['title'] == row[1]]['genre_id'].iloc[0]
-        new_df.loc[idx, 'genre_top'] = genre_id
+            genre_id = genres_df[genres_df['title'] == row[1]]['genre_id'].iloc[0]
+        new_df.loc[idx, 'genre_top'] = genre_id     # replace dataframe values with ids
 
-    new_df = new_df.drop('subset', 1)
+    new_df = new_df.drop('subset', 1)       # remove column that is now useless
 
     train_df = new_df[new_df.split == 'training']
-    train_df = train_df.drop('split', 1)
+    train_df = train_df.drop('split', 1)    # remove useless columns
     valid_df = new_df[new_df.split == 'validation']
     valid_df = valid_df.drop('split', 1)
     test_df = new_df[new_df.split == 'test']
