@@ -66,23 +66,23 @@ Generate relevant metadata running ![metadata.py](https://github.com/kristijanba
 
 Project structure:
 
-data/
-	fma_{size}/
-		000/
-		001/
-		...
-	fma_metadata/
-		genres.csv
-		tracks.csv
-out/
-	graphs/
-	plot.png
-src/
-	main.py
-	mel-spec.py
-	metadata.py
-	model.py
-	utility.py
+.
+* data/
+	* fma_{size}/
+		* 000/
+		* 001/
+	* fma_metadata/
+		* genres.csv
+		* tracks.csv
+* out/
+	* graphs/
+	* mel-specs/
+* src/
+	* main.py
+	* mel-spec.py
+	* metadata.py
+	* model.py
+	* utility.py
 
 ## Relevant literature
 
