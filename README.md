@@ -73,9 +73,16 @@ Project structure:
 	* fma_metadata/
 		* genres.csv
 		* tracks.csv
+* in/
+	* mel-specs/
+		* 000/
+		* 001/
+	* metadata/
+		* test.csv
+		* train.csv
+		* valid.csv
 * out/
 	* graphs/
-	* mel-specs/
 * src/
 	* main.py
 	* mel-spec.py
