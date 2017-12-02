@@ -2,37 +2,60 @@
 # http://nbviewer.jupyter.org/github/bmcfee/librosa/blob/master/examples/LibROSA%20demo.ipynb
 
 import librosa
-from librosa import display
-import matplotlib.pyplot as plt
 
 import numpy as np
-import warnings
+import scipy.misc
 import os
+import time
+
+music_dir = '../data/fma_medium'      # directory where you extracted FMA dataset with .mp3s
+spectr_fpath = '../in/mel-specs/{}'
+logs_file = '../out/logs/mel-spec.log'
 
 
-def generate_plot(fname, log_S, sr):
-    fig = plt.figure(frameon=False)
-    fig.set_size_inches(24, 8)
+def __extract_hpss_melspec(audio_fpath, audio_fname):
+    """
+    Extension of :func:`__extract_melspec`.
+    Not used as it's about ten times slower, but
+    if you have resources, try it out.
 
-    # Fill the whole plot
-    ax = plt.Axes(fig, [0., 0., 1., 1.])
-    ax.set_axis_off()
-    fig.add_axes(ax)
+    :param audio_fpath:
+    :param audio_fname:
+    :return:
+    """
+    y, sr = librosa.load(audio_fpath, sr=44100)
 
-    librosa.display.specshow(log_S, sr=sr, x_axis='time', y_axis='mel')
-    plt.tight_layout()
+    # Harmonic-percussive source separation
+    y_harmonic, y_percussive = librosa.effects.hpss(y)
 
-    spec_fpath = '../out/mel-specs/{}'
-    spec_fname = fname.replace('.mp3', '.png')
+    S_h = librosa.feature.melspectrogram(y_harmonic, sr=sr, n_mels=128)
+    S_p = librosa.feature.melspectrogram(y_percussive, sr=sr, n_mels=128)
 
-    print('Saving spectrogram in {}'.format(spec_fpath.format(spec_fname)))
-    fig.savefig(spec_fpath.format(spec_fname))
-    plt.close()
+    log_S_h = librosa.logamplitude(S_h, ref_power=np.max)
+    log_S_p = librosa.logamplitude(S_p, ref_power=np.max)
+
+    audio_filename, _ = os.path.splitext(audio_fname)
+
+    spec_fname_h = (audio_filename + '_h.png')
+    spec_fname_p = (audio_filename + '_p.png')
+
+    print('Saving harmonic spectrogram in {}'.format(spectr_fpath.format(spec_fname_h)))
+    scipy.misc.toimage(log_S_h).save(spectr_fpath.format(spec_fname_h))
+    print('Saving percussive spectrogram in {}'.format(spectr_fpath.format(spec_fname_p)))
+    scipy.misc.toimage(log_S_p).save(spectr_fpath.format(spec_fname_p))
 
 
-def extract_melspec(audio_fpath, audio_fname):
+def __extract_melspec(audio_fpath, audio_fname):
+    """
+    Using librosa to calculate log mel spectrogram values
+    and scipy.misc to draw and store them (in grayscale).
+
+    :param audio_fpath:
+    :param audio_fname:
+    :return:
+    """
     # Load sound file
-    y, sr = librosa.load(audio_fpath)
+    y, sr = librosa.load(audio_fpath, sr=44100)
 
     # Let's make and display a mel-scaled power (energy-squared) spectrogram
     S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
@@ -40,29 +63,52 @@ def extract_melspec(audio_fpath, audio_fname):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = librosa.logamplitude(S, ref_power=np.max)
 
-    generate_plot(audio_fname, log_S, sr)
+    spec_fname = audio_fname.replace('.mp3', '.png')
+
+    # Draw log values matrix in grayscale
+    print('Saving harmonic spectrogram in {}'.format(spectr_fpath.format(spec_fname)))
+    scipy.misc.toimage(log_S).save(spectr_fpath.format(spec_fname))
+
+
+def __get_times():
+    current_time = time.time()
+    op_time = current_time - op_start_time
+    overall_time = current_time - start_time
+    h, m, s = int(overall_time) // 3600, (int(overall_time) % 3600) // 60, overall_time % 60
+
+    return op_time, h, m, s
+
+
+def __log(outcome):
+    op_time, h, m, s = __get_times()
+    logline = '{0} | {1:.2f} seconds | {2:02d}:{3:02d}:{4:02d} | {5} | {6}/{7} [{8:.2f}%]'\
+        .format(outcome, op_time, h, m, int(s), fpath, i, nfiles, i / nfiles * 100)
+
+    print(logline)
+    flogs.write(logline + '\n')
 
 
 if __name__ == '__main__':
-    # Root directory where you downloaded FMA dataset with .mp3s
-    rootdir = '../data/fma_medium'
+    start_time = time.time()
 
-    # Surpress UserWarnings from matplotlib; they occur as we are saving only plots' content, not axes and borders
-    warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
-
+    flogs = open(logs_file, 'a')    # create a file without truncating it in case it exists
+    nfiles = sum([len(files) for r, d, files in os.walk(music_dir)])
     i = 0
-    nfiles = sum([len(files) for r, d, files in os.walk(rootdir)])
 
     print('Extracting mel-spectrograms from raw data root directory...')
-    for subdir, dirs, files in os.walk(rootdir):
+    for subdir, dirs, files in os.walk(music_dir):
         for file in files:
             if file.lower().endswith('.mp3'):
                 fpath = os.path.join(subdir, file)
-                print('{0} (extracting)..................{1}/{2} ({3:.2f}%)'.format(fpath, i, nfiles, i / nfiles * 100))
-                extract_melspec(fpath, file)
+                op_start_time = time.time()
+                try:
+                    __extract_melspec(fpath, file)
+                except:
+                    __log('ERROR')
+                    continue
+                __log('OK')
                 i += 1
-                if i == 100:
-                    # Generate a 100 samples for testing purposes; they still need to be labeled
-                    exit(0)
             else:
                 continue
+
+    flogs.close()
