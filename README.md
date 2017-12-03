@@ -25,7 +25,7 @@ To be able to run all parts of this project, you will need the following additio
 
 [Mel-spectrograms](https://en.wikipedia.org/wiki/Mel_scale) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/plot.png)
 
-However, when generating images for the model, image is generated a bit differently - spectrogram values matrix is dumped into an image in grayscale. Information is preserved this way and there is only one input layer for convolution instead of three. An example of such an image is: ![Grayscale spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/020055.png)
+However, when generating images for the model, image is generated a bit differently - spectrogram values matrix is dumped into an image in grayscale. Information is preserved this way and there is only one input layer for convolution instead of three. An example of such an image is: ![Grayscale spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/106462.png)
 
 Other spectrograms could also be used as described and compared in detail in [5]. In this work, except mel-spectrograms, raw audio input will also be tested [6].
 
@@ -73,6 +73,10 @@ Project structure:
 	* metadata.py
 	* model.py
 	* utility.py
+	
+## Results
+
+The model is not tested yet...
 
 ## Relevant literature
 
