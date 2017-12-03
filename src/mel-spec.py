@@ -71,10 +71,10 @@ def __extract_melspec(audio_fpath, audio_fname):
     :return:
     """
     # Load sound file
-    y, sr = librosa.load(audio_fpath, sr=44100)
+    y, sr = librosa.load(audio_fpath, sr=12000)
 
     # Let's make and display a mel-scaled power (energy-squared) spectrogram
-    S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128)
+    S = librosa.feature.melspectrogram(y, sr=sr, hop_length=256, n_mels=96)
 
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = librosa.logamplitude(S, ref_power=np.max)
@@ -103,6 +103,7 @@ def __log(outcome):
 
     print(logline)
     flogs.write(logline + '\n')
+    flogs.flush()
 
 
 if __name__ == '__main__':
