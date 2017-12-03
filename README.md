@@ -23,28 +23,11 @@ To be able to run all parts of this project, you will need the following additio
 
 ## Input features
 
-[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel-frequency_cepstrum) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/plot.png)
+[Mel-spectrograms](https://en.wikipedia.org/wiki/Mel_scale) are extracted from .mp3s and used as model inputs. An example of such a spectrogram is: ![Mel-spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/plot.png)
 
-However, when generating images for out network, we save only the content inside a plot (and it takes a while):
-```
-/usr/bin/python3.6 /home/kristijan/FER/projekt/Deep-Music-Tagger/src/mel-spec.py
-Extracting mel-spectrograms from raw data root directory...
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106864.mp3 (extracting)..........0/25002 (0.00%)
-Saving spectrogram in ../out/mel-specs/106864.png
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106343.mp3 (extracting)..........1/25002 (0.00%)
-Saving spectrogram in ../out/mel-specs/106343.png
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106870.mp3 (extracting)..........2/25002 (0.01%)
-Saving spectrogram in ../out/mel-specs/106870.png
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106342.mp3 (extracting)..........3/25002 (0.01%)
-Saving spectrogram in ../out/mel-specs/106342.png
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106630.mp3 (extracting)..........4/25002 (0.02%)
-Saving spectrogram in ../out/mel-specs/106630.png
-/home/kristijan/FER/projekt/Deep-Music-Tagger/data/fma_medium/106/106881.mp3 (extracting)..........5/25002 (0.02%)
+However, when generating images for the model, image is generated a bit differently - spectrogram values matrix is dumped into an image in grayscale. Information is preserved this way and there is only one input layer for convolution instead of three. An example of such an image is: ![Grayscale spectrogram example](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/020055.png)
 
-(...)
-```
-
-However, other spectrograms could also be used as described and compared in detail in [5]. In this work, except mel-spectrograms, raw audio input will also be tested [6].
+Other spectrograms could also be used as described and compared in detail in [5]. In this work, except mel-spectrograms, raw audio input will also be tested [6].
 
 ## Data
 
@@ -83,6 +66,7 @@ Project structure:
 		* valid.csv
 * out/
 	* graphs/
+	* logs/
 * src/
 	* main.py
 	* mel-spec.py
