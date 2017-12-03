@@ -73,6 +73,10 @@ Project structure:
 	* metadata.py
 	* model.py
 	* utility.py
+	
+## Results
+
+The model is not tested yet...
 
 ## Relevant literature
 
