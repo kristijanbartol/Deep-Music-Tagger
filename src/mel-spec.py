@@ -116,6 +116,8 @@ if __name__ == '__main__':
     for subdir, dirs, files in os.walk(music_dir):
         for file in files:
             if file.lower().endswith('.mp3'):
+                if file.lower()[:3] in ('020', '028', '048', '057', '106', '114', '119', '135', '138', '144'):
+                    continue
                 fpath = os.path.join(subdir, file)
                 op_start_time = time.time()
                 try:

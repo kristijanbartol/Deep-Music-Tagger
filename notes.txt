@@ -23,3 +23,7 @@
 - feed network with more than just mel-spectrogram images?
 	-> Q: how much information does mel-spectrogram contain (do faster songs end up not being converted with enough details?)?
 
+- extend FMA to have more data
+
+- prediction confidence: for arbitrary song (not bounded to 30s), user can demand higher confidence so you create multiple 30s spectrograms
+
