@@ -7,10 +7,13 @@ import numpy as np
 import scipy.misc
 import os
 import time
+import argparse
 
 music_dir = '../data/fma_medium'      # directory where you extracted FMA dataset with .mp3s
 spectr_template = '../in/mel-specs/{}'
 logs_file = '../out/logs/mel-spec.log'
+
+regenerate = False
 
 
 def __get_subdir(spectr_fname):
@@ -105,6 +108,13 @@ def __log(outcome):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--regenerate', action='store_true', help='ovewrite existing spectrograms')
+    args = parser.parse_args()
+
+    if args.regenerate:
+        regenerate = True
+
     start_time = time.time()
 
     flogs = open(logs_file, 'a')    # create a file without truncating it in case it exists
@@ -117,7 +127,7 @@ if __name__ == '__main__':
                 fpath = os.path.join(subdir, file)
                 fname, _ = os.path.splitext(file)         # (filename, extension)
                 # check if spectrogram is already generated
-                if os.path.isfile(spectr_template.format(fname[:3] + '/' + fname + '.png')):
+                if not regenerate and os.path.isfile(spectr_template.format(fname[:3] + '/' + fname + '.png')):
                     continue
                 op_start_time = time.time()
                 try:
