@@ -9,7 +9,7 @@ import os
 import time
 
 music_dir = '../data/fma_medium'      # directory where you extracted FMA dataset with .mp3s
-spectr_path = '../in/mel-specs/{}'
+spectr_template = '../in/mel-specs/{}'
 logs_file = '../out/logs/mel-spec.log'
 
 
@@ -21,7 +21,7 @@ def __get_subdir(spectr_fname):
     :param spectr_fname:
     :return:
     """
-    spectr_subdir = spectr_path.format(spectr_fname[:3] + '/')
+    spectr_subdir = spectr_template.format(spectr_fname[:3] + '/')
     if not os.path.exists(spectr_subdir):
         os.makedirs(spectr_subdir)
     return spectr_subdir + '{}'
@@ -48,10 +48,8 @@ def __extract_hpss_melspec(audio_fpath, audio_fname):
     log_S_h = librosa.logamplitude(S_h, ref_power=np.max)
     log_S_p = librosa.logamplitude(S_p, ref_power=np.max)
 
-    audio_filename, _ = os.path.splitext(audio_fname)
-
-    spectr_fname_h = (audio_filename + '_h.png')
-    spectr_fname_p = (audio_filename + '_p.png')
+    spectr_fname_h = (audio_fname + '_h.png')
+    spectr_fname_p = (audio_fname + '_p.png')
 
     subdir_path = __get_subdir(audio_fname)
 
@@ -79,7 +77,7 @@ def __extract_melspec(audio_fpath, audio_fname):
     # Convert to log scale (dB). We'll use the peak power as reference.
     log_S = librosa.logamplitude(S, ref_power=np.max)
 
-    spectr_fname = audio_fname.replace('.mp3', '.png')
+    spectr_fname = audio_fname + '.png'
     subdir_path = __get_subdir(spectr_fname)
 
     # Draw log values matrix in grayscale
@@ -116,12 +114,14 @@ if __name__ == '__main__':
     for subdir, dirs, files in os.walk(music_dir):
         for file in files:
             if file.lower().endswith('.mp3'):
-                if file.lower()[:3] in ('020', '028', '048', '057', '106', '114', '119', '135', '138', '144'):
-                    continue
                 fpath = os.path.join(subdir, file)
+                fname, _ = os.path.splitext(file)         # (filename, extension)
+                # check if spectrogram is already generated
+                if os.path.isfile(spectr_template.format(fname[:3] + '/' + fname + '.png')):
+                    continue
                 op_start_time = time.time()
                 try:
-                    __extract_melspec(fpath, file)
+                    __extract_melspec(fpath, fname)
                 except:
                     __log('FAILED')
                     continue
