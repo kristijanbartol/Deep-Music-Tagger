@@ -92,34 +92,45 @@ def __extract_melspec(audio_fpath, audio_fname):
 
 def __unify_img_sizes(min_width, expected_width):
     img_as_np = np.zeros(1)
+    deleted_cnt = 0
+    failed_dlt_cnt = 0
     for subdir, dirs, files in os.walk(spectr_dir):
         for file in files:
             fpath = os.path.join(subdir, file)
             img = Image.open(fpath)
             width = img.size[0]
             height = img.size[1]
+            # no use of problematic spectrograms much shorter than min_width
             if width < min_width:
                 try:
                     print('DELETE | {} | {}x{} (width < min_width ({}))'
                           .format(fpath, height, width, min_width))
                     os.remove(fpath)
+                    deleted_cnt += 1
                 except:
                     print('Error occured while deleting mel-spec')
+                    failed_dlt_cnt += 1
                 continue
             elif width > expected_width:
                 print('CROP | {} | {}x{} | width > expected_width ({})'
                       .format(fpath, height, width, expected_width))
+                # crop to (height, expected_width) and remove third dimension (channel) to draw grayscale
                 img_as_np = np.asarray(img.getdata()).reshape(height, width, -1)[:, :expected_width, :]\
                     .reshape(height, -1)
             elif width < expected_width:
                 print('APPEND | {} | {}x{} | min_width ({}) < width < expected_width ({})'
                       .format(fpath, height, width, min_width, expected_width))
                 img_as_np = np.asarray(img.getdata()).reshape(height, width, -1)
+                # fill in image with black pixels up to (height, expected_width)
                 img_as_np = np.hstack((img_as_np.reshape(height, -1), np.zeros((height, expected_width - width))))
+            else:
+                continue
 
             # Replace spectrograms
             os.remove(fpath)
             scipy.misc.toimage(img_as_np).save(fpath)
+
+    return deleted_cnt, failed_dlt_cnt
 
 
 def __get_times():
@@ -179,4 +190,7 @@ if __name__ == '__main__':
 
     flogs.close()
     print('Generating spectrogram finished! Generated {}/{} images successfully'.format(ok_cnt, ok_cnt + fail_cnt))
-    __unify_img_sizes(1404, 1406)
+
+    # aligning spectrograms to the same dimensions to feed convolutional input properly
+    deleted, failed_dlt = __unify_img_sizes(1404, 1406)
+    print('Finished alinging image sizes! Deleted problematic spectrograms: {}/{}'.format(deleted, deleted+failed_dlt))
