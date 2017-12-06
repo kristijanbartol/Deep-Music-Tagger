@@ -8,8 +8,10 @@ import scipy.misc
 import os
 import time
 import argparse
+from PIL import Image
 
-music_dir = '../data/fma_medium'      # directory where you extracted FMA dataset with .mp3s
+music_dir = '../data/fma_medium/'      # directory where you extracted FMA dataset with .mp3s
+spectr_dir = '../in/mel-specs/'
 spectr_template = '../in/mel-specs/{}'
 logs_file = '../out/logs/mel-spec.log'
 
@@ -56,9 +58,7 @@ def __extract_hpss_melspec(audio_fpath, audio_fname):
 
     subdir_path = __get_subdir(audio_fname)
 
-    print('Saving harmonic spectrogram in {}'.format(subdir_path.format(spectr_fname_h)))
     scipy.misc.toimage(log_S_h).save(subdir_path.format(spectr_fname_h))
-    print('Saving percussive spectrogram in {}'.format(subdir_path.format(spectr_fname_p)))
     scipy.misc.toimage(log_S_p).save(subdir_path.format(spectr_fname_p))
 
 
@@ -83,9 +83,43 @@ def __extract_melspec(audio_fpath, audio_fname):
     spectr_fname = audio_fname + '.png'
     subdir_path = __get_subdir(spectr_fname)
 
+    print(type(log_S))
+    print(log_S.shape)
+
     # Draw log values matrix in grayscale
-    print('Saving harmonic spectrogram in {}'.format(subdir_path.format(spectr_fname)))
     scipy.misc.toimage(log_S).save(subdir_path.format(spectr_fname))
+
+
+def __unify_img_sizes(min_width, expected_width):
+    img_as_np = np.zeros(1)
+    for subdir, dirs, files in os.walk(spectr_dir):
+        for file in files:
+            fpath = os.path.join(subdir, file)
+            img = Image.open(fpath)
+            width = img.size[0]
+            height = img.size[1]
+            if width < min_width:
+                try:
+                    print('DELETE | {} | {}x{} (width < min_width ({}))'
+                          .format(fpath, height, width, min_width))
+                    os.remove(fpath)
+                except:
+                    print('Error occured while deleting mel-spec')
+                continue
+            elif width > expected_width:
+                print('CROP | {} | {}x{} | width > expected_width ({})'
+                      .format(fpath, height, width, expected_width))
+                img_as_np = np.asarray(img.getdata()).reshape(height, width, -1)[:, :expected_width, :]\
+                    .reshape(height, -1)
+            elif width < expected_width:
+                print('APPEND | {} | {}x{} | min_width ({}) < width < expected_width ({})'
+                      .format(fpath, height, width, min_width, expected_width))
+                img_as_np = np.asarray(img.getdata()).reshape(height, width, -1)
+                img_as_np = np.hstack((img_as_np.reshape(height, -1), np.zeros((height, expected_width - width))))
+
+            # Replace spectrograms
+            os.remove(fpath)
+            scipy.misc.toimage(img_as_np).save(fpath)
 
 
 def __get_times():
@@ -98,6 +132,7 @@ def __get_times():
 
 
 def __log(outcome):
+    i = ok_cnt + fail_cnt
     op_time, h, m, s = __get_times()
     logline = '{0} | {1:.2f} seconds | {2:02d}:{3:02d}:{4:02d} | {5} | {6}/{7} [{8:.2f}%]'\
         .format(outcome, op_time, h, m, int(s), fpath, i, nfiles, i / nfiles * 100)
@@ -119,9 +154,10 @@ if __name__ == '__main__':
 
     flogs = open(logs_file, 'a')    # create a file without truncating it in case it exists
     nfiles = sum([len(files) for r, d, files in os.walk(music_dir)])
-    i = 0
+    ok_cnt = 0
+    fail_cnt = 0
 
-    for subdir, dirs, files in os.walk(music_dir):
+    for subdir, _, files in os.walk(music_dir):
         for file in files:
             if file.lower().endswith('.mp3'):
                 fpath = os.path.join(subdir, file)
@@ -134,10 +170,13 @@ if __name__ == '__main__':
                     __extract_melspec(fpath, fname)
                 except:
                     __log('FAILED')
+                    fail_cnt += 1
                     continue
+                ok_cnt += 1
                 __log('OK')
-                i += 1
             else:
                 continue
 
     flogs.close()
+    print('Generating spectrogram finished! Generated {}/{} images successfully'.format(ok_cnt, ok_cnt + fail_cnt))
+    __unify_img_sizes(1404, 1406)
