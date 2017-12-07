@@ -32,8 +32,7 @@ Other spectrograms could also be used as described and compared in detail in [5]
 ## Data
 
 Using [FMA dataset (A Dataset For Music Analysis)](https://github.com/mdeff/fma) [2]. It is a collection of freely available MP3s (under Creative Commons license) most convenient for research projects and (currently) only publicly available music dataset of a kind.
-
-Genres (in full dataset) distribution is shown in the following histogram: ![Genres histogram](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/genre_top.png)
+Top 16 genres distribution is shown in the following histogram: ![Genres histogram](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/out/graphs/genre_top.png)
 
 ## Usage
 
