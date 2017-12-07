@@ -43,8 +43,8 @@ data_size = DataSize('medium')
 
 def _read_metaset(fpath):
     metaset = pd.read_csv(fpath)
-    metaset_x = metaset['track_id']
-    metaset_y = np.hstack((metaset['genre_top'], metaset['genres_all']))
+    metaset_x = metaset['track_id'].as_matrix()
+    metaset_y = np.vstack((metaset['genre_top'].as_matrix(), metaset['genres_all'].as_matrix()))
     return metaset_x, metaset_y
 
 

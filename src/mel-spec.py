@@ -93,7 +93,7 @@ def __extract_melspec(audio_fpath, audio_fname):
 def __unify_img_sizes(min_width, expected_width):
     deleted_cnt = 0
     failed_dlt_cnt = 0
-    for subdir, dirs, files in os.walk(spectr_dir):
+    for subdir, _, files in os.walk(spectr_dir):
         for file in files:
             fpath = os.path.join(subdir, file)
             img = Image.open(fpath)

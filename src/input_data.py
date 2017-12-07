@@ -1,4 +1,9 @@
+import numpy as np
+import os
+
 import metadata as meta
+
+spectr_template = '../in/mel-specs/{}'
 
 
 class Dataset:
@@ -17,19 +22,11 @@ class SplitData:
         self.y_multi = y_multi
         self.y = y_oh       # problem is single label classification in the first phase
 
-
-def _load_images(meta_set_x):
-    """
-    Load actual spectrogram images from
-    provided metadata tracks ids.
-
-    :param meta_set_x:
-    :return:
-    """
-    return _
+    def next_batch(self, batch_size):
+        pass
 
 
-def _hstack(images, y_stack):
+def _vstack(track_ids, y_stack):
     """
     Some spectrogram images might be missing as they
     failed to generate so dimensions wouldn't match
@@ -40,13 +37,30 @@ def _hstack(images, y_stack):
     :param y_stack:
     :return:
     """
-    return _
+    all_cnt = 0
+    dlt_cnt = 0
+    for idx, track_id in enumerate(track_ids):
+        track_id_str = str(track_id)
+        all_cnt += 1
+        if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
+            np.delete(track_ids, idx, 0)
+            np.delete(y_stack, idx, 1)
+            dlt_cnt += 1
+    return np.vstack((track_ids, y_stack)), all_cnt, dlt_cnt
 
 
 def get_data():
     meta_train_x, train_y, meta_valid_x, valid_y, meta_test_x, test_y = meta.get_metadata()
-    train = _hstack(_load_images(meta_train_x), train_y)
-    test = _hstack(_load_images(meta_test_x), test_y)
-    valid = _hstack(_load_images(meta_valid_x), valid_y)
+
+    train, all_cnt, dlt_cnt = _vstack(meta_train_x, train_y)
+    print('Removed {} of {} train records'.format(dlt_cnt, all_cnt))
+    test, all_cnt, dlt_cnt = _vstack(meta_test_x, test_y)
+    print('Removed {} of {} test records'.format(dlt_cnt, all_cnt))
+    valid, all_cnt, dlt_cnt = _vstack(meta_valid_x, valid_y)
+    print('Removed {} of {} validation records'.format(dlt_cnt, all_cnt))
 
     return Dataset(train, test, valid)
+
+
+if __name__ == '__main__':
+    get_data()
