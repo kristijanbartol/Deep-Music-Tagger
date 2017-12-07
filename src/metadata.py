@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import sys
 
 fdata_template = '../data/fma_metadata/{}'
@@ -40,13 +41,18 @@ class DataSize:
 data_size = DataSize('medium')
 
 
+def _read_metaset(fpath):
+    metaset = pd.read_csv(fpath)
+    metaset_x = metaset['track_id']
+    metaset_y = np.hstack((metaset['genre_top'], metaset['genres_all']))
+    return metaset_x, metaset_y
+
+
 def get_metadata():
-    train_x = ...
-    train_y = ...
-    valid_x = ...
-    valid_y = ...
-    test_x = ...
-    test_y = ...
+    train_x, train_y = _read_metaset(modeldata_template.format('train.csv'))
+    valid_x, valid_y = _read_metaset(modeldata_template.format('valid.csv'))
+    test_x, test_y   = _read_metaset(modeldata_template.format('test.csv'))
+
     return train_x, train_y, valid_x, valid_y, test_x, test_y
 
 
@@ -73,7 +79,7 @@ def __extract_id_from_str_list(ids_string, top_ids):
     :return:
     """
     for id in ids_string[1:-1].replace(' ', '').split(','):
-        # TODO: fill in prioritized values - give more rare ids greater priority (in case there are multiple top genres)
+        # IDEA: fill in prioritized values - give more rare ids greater priority (in case there are multiple top genres)
         if int(id) in top_ids:
             return int(id)
     return None
