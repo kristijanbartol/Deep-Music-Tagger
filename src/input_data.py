@@ -43,6 +43,7 @@ def _vstack(track_ids, y_stack):
         track_id_str = str(track_id)
         all_cnt += 1
         if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
+            print(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png'))
             np.delete(track_ids, idx, 0)
             np.delete(y_stack, idx, 1)
             dlt_cnt += 1

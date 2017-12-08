@@ -108,14 +108,17 @@ if __name__ == '__main__':
             new_df.drop(idx, inplace=True)
             continue
         if type(row[1]) != str:             # not all values have 'genre_top' value assigned; fill in using 'genres_all'
-            genre_id = __extract_id_from_str_list(row[2], top_genre_ids)
+            genre_id = str(__extract_id_from_str_list(row[2], top_genre_ids))
             if genre_id is None:
                 print('Note: unable to find top genre tag to assign - removing row')
                 new_df.drop(idx, inplace=True)
                 continue
         else:                               # replace genre names with corresponding ids
-            genre_id = genres_df[genres_df['title'] == row[1]]['genre_id'].iloc[0]
-        new_df.loc[idx, 'genre_top'] = genre_id     # replace dataframe values with ids
+            genre_id = str(genres_df[genres_df['title'] == row[1]]['genre_id'].iloc[0])
+
+        # append zeros if track_id is shorted than six characters
+        app_genre_id = '0' * (6 - len(genre_id)) + genre_id
+        new_df.loc[idx, 'genre_top'] = app_genre_id     # replace dataframe values with ids
 
     new_df = new_df.drop('subset', 1)       # remove column that is now useless
 
