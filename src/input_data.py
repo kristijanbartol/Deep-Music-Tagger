@@ -27,6 +27,8 @@ class SplitData:
     def __init__(self, track_ids, y_top, y_all):
         self.track_ids = track_ids
         self.y = self._create_output_vector(y_top, y_all)
+        self.top_genre_significance = 0.75
+        self.current_sample_idx = 0
 
     @staticmethod
     def _get_indices_mapping(y_all):
@@ -49,19 +51,23 @@ class SplitData:
         vsize = len(idx_map)
         for i in range(y_top.shape[0]):
             yi = [0] * vsize
-            yi[idx_map[y_top[i]]] = 0.75 if len(y_all[i]) > 1 else 1
+            yi[idx_map[y_top[i]]] = self.top_genre_significance if len(y_all[i]) > 1 else 1
 
-            significance = 0.25 / max(1, len(y_all[i]) - 1)
+            other_genres_significance = (1 - self.top_genre_significance) / max(1, len(y_all[i]) - 1)
             for genre_id in y_all[i]:
                 if genre_id == y_top[i]:
                     continue
-                yi[idx_map[genre_id]] = significance
+                yi[idx_map[genre_id]] = other_genres_significance
             y.append(yi)
 
         return np.array(y)
 
     def next_batch(self, batch_size):
-        pass
+        # TODO: handle overflow index case
+        batch_track_ids = self.track_ids[self.current_sample_idx:self.current_sample_idx+batch_size]
+        batch_y = self.y[self.current_sample_idx:self.current_sample_idx+batch_size]
+
+        return batch_track_ids, batch_y
 
 
 def _vstack(track_ids, y_stack):
