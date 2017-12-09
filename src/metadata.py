@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import ast
 import sys
 
 fdata_template = '../data/fma_metadata/{}'
@@ -50,7 +51,8 @@ def _read_metaset(fpath):
     """
     metaset = pd.read_csv(fpath, dtype={'track_id': object})
     metaset_x = metaset.track_id.as_matrix()
-    metaset_y = np.vstack((metaset.genre_top.as_matrix(), metaset.genres_all.as_matrix()))
+    genres_all_lists = [ast.literal_eval(x) for x in metaset.genres_all.tolist()]
+    metaset_y = np.vstack((metaset.genre_top.as_matrix(), genres_all_lists))
     return metaset_x, metaset_y
 
 

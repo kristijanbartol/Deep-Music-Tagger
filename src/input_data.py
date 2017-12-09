@@ -29,8 +29,8 @@ class SplitData:
         self.y = self._assign_output(y_top, y_all)
 
     @staticmethod
-    def _assign_output(self, y_top, y_all):
-        return _
+    def _assign_output(y_top, y_all):
+        return ''
 
     def next_batch(self, batch_size):
         pass
