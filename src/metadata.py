@@ -42,6 +42,12 @@ data_size = DataSize('medium')
 
 
 def _read_metaset(fpath):
+    """
+    Reading metaset columns as x and y representing input and ouput.
+
+    :param fpath:
+    :return metaset_x, metaset_y:
+    """
     metaset = pd.read_csv(fpath, dtype={'track_id': object})
     metaset_x = metaset.track_id.as_matrix()
     metaset_y = np.vstack((metaset.genre_top.as_matrix(), metaset.genres_all.as_matrix()))
@@ -49,6 +55,11 @@ def _read_metaset(fpath):
 
 
 def get_metadata():
+    """
+    Public function reads metadata and returns it splitted.
+
+    :return train_x, train_y, valid_x, valid_y, test_x, test_y:
+    """
     train_x, train_y = _read_metaset(modeldata_template.format('train.csv'))
     valid_x, valid_y = _read_metaset(modeldata_template.format('valid.csv'))
     test_x, test_y   = _read_metaset(modeldata_template.format('test.csv'))
@@ -86,6 +97,11 @@ def __extract_id_from_str_list(ids_string, top_ids):
 
 
 if __name__ == '__main__':
+    """
+    Main module that generates train.csv, valid.csv and test.csv.
+    It uses :py:class:: DataSize to store only the data specified
+    by the dataset size (small, medium, large).
+    """
     if len(sys.argv) == 3:
         data_size = DataSize(sys.argv[1])
 

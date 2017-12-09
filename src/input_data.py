@@ -7,6 +7,10 @@ spectr_template = '../in/mel-specs/{}'
 
 
 class Dataset:
+    """
+    First dataset class layer. The idea is to
+    "encapsulate" logic inside each of data splits.
+    """
 
     def __init__(self, train, valid, test):
         self.train = SplitData(train[0], train[1], train[2])
@@ -15,12 +19,18 @@ class Dataset:
 
 
 class SplitData:
+    """
+    Inner layer that does the actual spectrogram images fetching
+    for each batch and assigns expected values to output vector y.
+    """
 
-    def __init__(self, track_ids, y_oh, y_multi):
+    def __init__(self, track_ids, y_top, y_all):
         self.track_ids = track_ids
-        self.y_oh = y_oh
-        self.y_multi = y_multi
-        self.y = y_oh       # problem is single label classification in the first phase
+        self.y = self._assign_output(y_top, y_all)
+
+    @staticmethod
+    def _assign_output(self, y_top, y_all):
+        return _
 
     def next_batch(self, batch_size):
         pass
@@ -51,6 +61,12 @@ def _vstack(track_ids, y_stack):
 
 
 def get_data():
+    """
+    Reads metadata, stacks input and output to a single object.
+    Returns complex object that contain splitted set objects.
+
+    :return Dataset(train, test, valid):
+    """
     meta_train_x, train_y, meta_valid_x, valid_y, meta_test_x, test_y = meta.get_metadata()
 
     train, all_cnt, dlt_cnt = _vstack(meta_train_x, train_y)
@@ -64,4 +80,7 @@ def get_data():
 
 
 if __name__ == '__main__':
+    """
+    Used for testing.
+    """
     get_data()
