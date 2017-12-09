@@ -26,11 +26,39 @@ class SplitData:
 
     def __init__(self, track_ids, y_top, y_all):
         self.track_ids = track_ids
-        self.y = self._assign_output(y_top, y_all)
+        self.y = self._create_output_vector(y_top, y_all)
 
     @staticmethod
-    def _assign_output(y_top, y_all):
-        return ''
+    def _get_indices_mapping(y_all):
+        indices = []
+        for genre_list in y_all:
+            for genre_id in genre_list:
+                if genre_id not in indices:
+                    indices.append(genre_id)
+        indices = sorted(indices)
+        indices_map = dict()
+        for i, index in enumerate(indices):
+            indices_map[index] = i
+        return indices_map
+
+    def _create_output_vector(self, y_top, y_all):
+        idx_map = self._get_indices_mapping(y_all)
+
+        # dim(y) = (number_of_samples, number_of_unique_indices)
+        y = []
+        vsize = len(idx_map)
+        for i in range(y_top.shape[0]):
+            yi = [0] * vsize
+            yi[idx_map[y_top[i]]] = 0.75 if len(y_all[i]) > 1 else 1
+
+            significance = 0.25 / max(1, len(y_all[i]) - 1)
+            for genre_id in y_all[i]:
+                if genre_id == y_top[i]:
+                    continue
+                yi[idx_map[genre_id]] = significance
+            y.append(yi)
+
+        return np.array(y)
 
     def next_batch(self, batch_size):
         pass
@@ -83,4 +111,5 @@ if __name__ == '__main__':
     """
     Used for testing.
     """
-    get_data()
+    data = get_data()
+    print(np.sum(data.test.y, axis=1))
