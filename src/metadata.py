@@ -49,10 +49,13 @@ def _read_metaset(fpath):
     :param fpath:
     :return metaset_x, metaset_y:
     """
-    metaset = pd.read_csv(fpath, dtype={'track_id': object})
+    metaset = pd.read_csv(fpath, dtype={'track_id': object})    # read 'track_id' values as strings
     metaset_x = metaset.track_id.as_matrix()
+
+    # convert from string representation of list to list for each element of the 'genres_all' column
     genres_all_lists = [ast.literal_eval(x) for x in metaset.genres_all.tolist()]
     metaset_y = np.vstack((metaset.genre_top.as_matrix(), genres_all_lists))
+
     return metaset_x, metaset_y
 
 
@@ -92,7 +95,6 @@ def __extract_id_from_str_list(ids_string, top_ids):
     :return:
     """
     for id in ids_string[1:-1].replace(' ', '').split(','):
-        # IDEA: fill in prioritized values - give more rare ids greater priority (in case there are multiple top genres)
         if int(id) in top_ids:
             return int(id)
     return None
@@ -145,7 +147,6 @@ if __name__ == '__main__':
             print('{:.2f}%'.format(i / new_df.shape[0] * 100))  # not 100% accurate as the shape is changing
 
     new_df = new_df.drop('subset', 1)                   # remove column that is now useless
-    new_df.genres_all = new_df.genres_all.tolist()      # assure that 'genres_all' column is stored as list
 
     train_df = new_df[new_df.split == 'training']
     train_df = train_df.drop('split', 1)    # remove useless columns
