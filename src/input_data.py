@@ -1,5 +1,6 @@
 import numpy as np
 import os
+from PIL import Image
 
 import metadata as meta
 
@@ -62,9 +63,17 @@ class SplitData:
 
         return np.array(y)
 
+    @staticmethod
+    def _load_images(self, track_ids):
+        images = []
+        for track_id in track_ids:
+            fpath = spectr_template.format(track_id + '.png')
+            images.append(np.asarray(Image.open(fpath).getdata()))
+        return np.array(images)
+
     def next_batch(self, batch_size):
         # TODO: handle overflow index case
-        batch_track_ids = self.track_ids[self.current_sample_idx:self.current_sample_idx+batch_size]
+        batch_track_ids = self._load_images(self.track_ids[self.current_sample_idx:self.current_sample_idx+batch_size])
         batch_y = self.y[self.current_sample_idx:self.current_sample_idx+batch_size]
 
         return batch_track_ids, batch_y
