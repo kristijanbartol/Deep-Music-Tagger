@@ -117,7 +117,6 @@ if __name__ == '__main__':
     top_genre_ids = [genres_df[genres_df['title'] == genre]['genre_id'].iloc[0] for genre in top_genres]  # to genre ids
 
     i = 0
-
     for idx, row in new_df.iterrows():
         genre_id = -1
         # check 'subset' value; if the dataset size we are working with is smaller, skip
@@ -143,7 +142,8 @@ if __name__ == '__main__':
         if i % 1000 == 0:
             print('{:.2f}%'.format(i / new_df.shape[0] * 100))  # not 100% accurate as the shape is changing
 
-    new_df = new_df.drop('subset', 1)       # remove column that is now useless
+    new_df = new_df.drop('subset', 1)                   # remove column that is now useless
+    new_df.genres_all = new_df.genres_all.tolist()      # assure that 'genres_all' column is stored as list
 
     train_df = new_df[new_df.split == 'training']
     train_df = train_df.drop('split', 1)    # remove useless columns
