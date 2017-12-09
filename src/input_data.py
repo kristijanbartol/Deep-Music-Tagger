@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import random
 from PIL import Image
 
 import metadata as meta
@@ -26,10 +27,10 @@ class SplitData:
     """
 
     def __init__(self, track_ids, y_top, y_all):
-        self.track_ids = track_ids
-        self.y = self._create_output_vector(y_top, y_all)
         self.top_genre_significance = 0.75
         self.current_sample_idx = 0
+        self.track_ids = track_ids
+        self.y = self._create_output_vector(y_top, y_all)
 
     @staticmethod
     def _get_indices_mapping(y_all):
@@ -64,17 +65,28 @@ class SplitData:
         return np.array(y)
 
     @staticmethod
-    def _load_images(self, track_ids):
+    def _load_images(track_ids):
         images = []
         for track_id in track_ids:
-            fpath = spectr_template.format(track_id + '.png')
-            images.append(np.asarray(Image.open(fpath).getdata()))
+            fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
+            images.append(np.asarray(Image.open(fpath).getdata()).reshape(1406, 96))
         return np.array(images)
 
     def next_batch(self, batch_size):
-        # TODO: handle overflow index case
-        batch_track_ids = self._load_images(self.track_ids[self.current_sample_idx:self.current_sample_idx+batch_size])
-        batch_y = self.y[self.current_sample_idx:self.current_sample_idx+batch_size]
+        # edge case when latter index is overflown
+        if self.current_sample_idx + batch_size > self.track_ids.shape[0]:
+            filling_ids = random.sample(range(self.current_sample_idx),
+                                        self.track_ids.shape[0] - self.current_sample_idx)
+            batch_track_ids = self._load_images(
+                self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids])
+            self.current_sample_idx = 0
+        else:
+            print(self.current_sample_idx)
+            print(self.track_ids.shape[0])
+            batch_track_ids = self._load_images(
+                self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size])
+            self.current_sample_idx += batch_size
+        batch_y = self.y[self.current_sample_idx:self.current_sample_idx + batch_size]
 
         return batch_track_ids, batch_y
 
@@ -127,4 +139,7 @@ if __name__ == '__main__':
     Used for testing.
     """
     data = get_data()
-    print(np.sum(data.test.y, axis=1))
+    batch_size = 100
+    for i in range(100):
+        batch = data.test.next_batch(batch_size)
+        print(batch[0].shape)
