@@ -54,11 +54,11 @@ def get_data():
     meta_train_x, train_y, meta_valid_x, valid_y, meta_test_x, test_y = meta.get_metadata()
 
     train, all_cnt, dlt_cnt = _vstack(meta_train_x, train_y)
-    print('Removed {} of {} train records'.format(dlt_cnt, all_cnt))
+    print('Removed {} of {} train records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
     test, all_cnt, dlt_cnt = _vstack(meta_test_x, test_y)
-    print('Removed {} of {} test records'.format(dlt_cnt, all_cnt))
+    print('Removed {} of {} test records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
     valid, all_cnt, dlt_cnt = _vstack(meta_valid_x, valid_y)
-    print('Removed {} of {} validation records'.format(dlt_cnt, all_cnt))
+    print('Removed {} of {} validation records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
 
     return Dataset(train, test, valid)
 

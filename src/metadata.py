@@ -42,9 +42,9 @@ data_size = DataSize('medium')
 
 
 def _read_metaset(fpath):
-    metaset = pd.read_csv(fpath)
-    metaset_x = metaset['track_id'].as_matrix()
-    metaset_y = np.vstack((metaset['genre_top'].as_matrix(), metaset['genres_all'].as_matrix()))
+    metaset = pd.read_csv(fpath, dtype={'track_id': object})
+    metaset_x = metaset.track_id.as_matrix()
+    metaset_y = np.vstack((metaset.genre_top.as_matrix(), metaset.genres_all.as_matrix()))
     return metaset_x, metaset_y
 
 
@@ -100,6 +100,8 @@ if __name__ == '__main__':
     top_genres = [genre for genre in top_genres if type(genre) == str]    # get top genres list without illegal elements
     top_genre_ids = [genres_df[genres_df['title'] == genre]['genre_id'].iloc[0] for genre in top_genres]  # to genre ids
 
+    i = 0
+
     for idx, row in new_df.iterrows():
         genre_id = -1
         # check 'subset' value; if the dataset size we are working with is smaller, skip
@@ -108,17 +110,22 @@ if __name__ == '__main__':
             new_df.drop(idx, inplace=True)
             continue
         if type(row[1]) != str:             # not all values have 'genre_top' value assigned; fill in using 'genres_all'
-            genre_id = str(__extract_id_from_str_list(row[2], top_genre_ids))
+            genre_id = __extract_id_from_str_list(row[2], top_genre_ids)
             if genre_id is None:
                 print('Note: unable to find top genre tag to assign - removing row')
                 new_df.drop(idx, inplace=True)
                 continue
         else:                               # replace genre names with corresponding ids
-            genre_id = str(genres_df[genres_df['title'] == row[1]]['genre_id'].iloc[0])
+            genre_id = genres_df[genres_df['title'] == row[1]]['genre_id'].iloc[0]
+        new_df.loc[idx, 'genre_top'] = genre_id     # replace dataframe values with ids
 
         # append zeros if track_id is shorted than six characters
-        app_genre_id = '0' * (6 - len(genre_id)) + genre_id
-        new_df.loc[idx, 'genre_top'] = app_genre_id     # replace dataframe values with ids
+        track_id = '0' * (6 - len(row[0])) + row[0]
+        new_df.loc[idx, 'track_id'] = track_id
+
+        i += 1
+        if i % 1000 == 0:
+            print('{:.2f}%'.format(i / new_df.shape[0] * 100))  # not 100% accurate as the shape is changing
 
     new_df = new_df.drop('subset', 1)       # remove column that is now useless
 
