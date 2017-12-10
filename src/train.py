@@ -1,17 +1,18 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
-from tensorflow.examples.tutorials.mnist import input_data
 
-DATA_DIR = '/home/kristijan/FER/DU/cnn/datasets/MNIST/'
-SAVE_DIR = '/home/kristijan/FER/DU/cnn/source/out/MNIST/'
+import input_data
+import model
 
 config = dict()
 config['max_epochs'] = 8
 config['batch_size'] = 50
-config['save_dir'] = SAVE_DIR
 config['weight_decay'] = 1e-2
 # TODO: add lr_policy for gradient descent optimizer
 config['lr_policy'] = {1: {'lr': 1e-1}, 3: {'lr': 1e-2}, 5: {'lr': 1e-3}, 7: {'lr': 1e-4}}
+
+img_height = 96
+img_width = 1366
 
 
 def build_model(inputs, num_classes, config):
@@ -64,32 +65,39 @@ def train(sess, train_set, accuracy_f, train_f, loss_f, config):
             if i % 100 == 0:
                 conv1_var = tf.contrib.framework.get_variables('conv1/weights:0')[0]
                 conv1_weights = conv1_var.eval(session=sess)
-                draw_conv_filters(epoch, i, conv1_weights, SAVE_DIR)
             if i > 0 and i % 50 == 0:
                 accuracy = sess.run(accuracy_f, feed_dict={x: batch[0], y: batch[1]})
                 print('Train accuracy = %.2f' % accuracy)
 
 
-mnist = input_data.read_data_sets(DATA_DIR, one_hot=True)
+def multi_output_cross_entropy(labels, logits):
 
-x = tf.placeholder(tf.float32, [None, 784])
-y = tf.placeholder(tf.float32, [None, 10])
 
-logits = build_model(x, 10, config)
 
-with tf.name_scope('loss'):
-    cross_entropy_loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(onehot_labels=y, logits=logits))
+if __name__ == '__main__':
 
-with tf.name_scope('optimizer'):
-    train_op = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy_loss)
+    data = input_data.get_data()
+    y_length = data.train.y.shape[0]
 
-with tf.name_scope('accuracy'):
-    correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
-    correct_prediction = tf.cast(correct_prediction, tf.float32)
-accuracy = tf.reduce_mean(correct_prediction)
+    x = tf.placeholder(tf.float32, [None, img_width * img_height])
+    y = tf.placeholder(tf.float32, [None, data.train.y.shape[0]])
 
-with tf.Session() as session:
-    session.run(tf.global_variables_initializer())
-    train(session, mnist.train, accuracy, train_op, cross_entropy_loss, config)
+    logits = model.build_model(x, y_length, config)
 
-    print('test accuracy {}'.format(accuracy.eval(feed_dict={x: mnist.test.images, y: mnist.test.labels})))
+    with tf.name_scope('loss'):
+        cross_entropy_loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(onehot_labels=y, logits=logits))
+
+    with tf.name_scope('optimizer'):
+        train_op = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy_loss)
+
+    with tf.name_scope('accuracy'):
+        correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
+        correct_prediction = tf.cast(correct_prediction, tf.float32)
+    accuracy = tf.reduce_mean(correct_prediction)
+
+    with tf.Session() as session:
+        session.run(tf.global_variables_initializer())
+        train(session, mnist.train, accuracy, train_op, cross_entropy_loss, config)
+
+        print('test accuracy {}'.format(accuracy.eval(feed_dict={x: mnist.test.images, y: mnist.test.labels})))
+

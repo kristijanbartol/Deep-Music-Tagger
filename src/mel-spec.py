@@ -188,6 +188,5 @@ if __name__ == '__main__':
     print('Generating spectrogram finished! Generated {}/{} images successfully'.format(ok_cnt, ok_cnt + fail_cnt))
 
     # aligning spectrograms to the same dimensions to feed convolutional input properly
-    # TODO: need to crop values to 1366 as in CRNN paper
-    deleted, failed_dlt = __unify_img_sizes(1404, 1406)
+    deleted, failed_dlt = __unify_img_sizes(1366, 1366)
     print('Finished alinging image sizes! Deleted problematic spectrograms: {}/{}'.format(deleted, deleted+failed_dlt))

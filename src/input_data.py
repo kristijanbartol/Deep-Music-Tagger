@@ -162,7 +162,7 @@ def get_data():
 
 if __name__ == '__main__':
     """
-    Used for testing.
+    Used for testing and debugging.
     """
     data = get_data()
     batch_size = 100
