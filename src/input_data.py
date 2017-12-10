@@ -7,6 +7,9 @@ import metadata as meta
 
 spectr_template = '../in/mel-specs/{}'
 
+img_height = 96
+img_width  = 1406
+
 
 class Dataset:
     """
@@ -14,10 +17,10 @@ class Dataset:
     "encapsulate" logic inside each of data splits.
     """
 
-    def __init__(self, train, valid, test):
-        self.train = SplitData(train[0], train[1], train[2])
-        self.valid = SplitData(valid[0], valid[1], valid[2])
-        self.test = SplitData(test[0], test[1], test[2])
+    def __init__(self, train_x, train_y, valid_x, valid_y, test_x, test_y):
+        self.train = SplitData(train_x, train_y[0], train_y[1])
+        self.valid = SplitData(valid_x, valid_y[0], valid_y[1])
+        self.test = SplitData(test_x, test_y[0], test_y[1])
 
 
 class SplitData:
@@ -46,6 +49,20 @@ class SplitData:
         return indices_map
 
     def _create_output_vector(self, y_top, y_all):
+        """
+        Instead of typical one-hot vector, a vector with
+        more than single non-zero element is created for
+        multi-output classification.
+
+        For top_genre, top_genre_significance is assigned.
+        For the rest of genres, if available,
+        (1 - top_genre_significance) is evenly assigned.
+
+        :param y_top:
+        :param y_all:
+        :return y:
+        """
+
         idx_map = self._get_indices_mapping(y_all)
 
         # dim(y) = (number_of_samples, number_of_unique_indices)
@@ -66,32 +83,42 @@ class SplitData:
 
     @staticmethod
     def _load_images(track_ids):
+        """
+        Private method for actual loading spectrogram data.
+
+        :param track_ids:
+        :return images:
+        """
         images = []
         for track_id in track_ids:
             fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
-            images.append(np.asarray(Image.open(fpath).getdata()).reshape(1406, 96))
+            images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
         return np.array(images)
 
     def next_batch(self, batch_size):
-        # edge case when latter index is overflown
-        if self.current_sample_idx + batch_size > self.track_ids.shape[0]:
+        """
+        Takes subset of input and output for interval
+        (current_idx : current_idx + batch_size).
+
+        :param batch_size:
+        :return batch_images, batch_y:
+        """
+        if self.current_sample_idx + batch_size > self.track_ids.shape[0]:  # edge case when latter index is overflown
             filling_ids = random.sample(range(self.current_sample_idx),
                                         self.track_ids.shape[0] - self.current_sample_idx)
-            batch_track_ids = self._load_images(
+            batch_images = self._load_images(
                 self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids])
             self.current_sample_idx = 0
         else:
-            print(self.current_sample_idx)
-            print(self.track_ids.shape[0])
-            batch_track_ids = self._load_images(
+            batch_images = self._load_images(
                 self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size])
             self.current_sample_idx += batch_size
         batch_y = self.y[self.current_sample_idx:self.current_sample_idx + batch_size]
 
-        return batch_track_ids, batch_y
+        return batch_images, batch_y
 
 
-def _vstack(track_ids, y_stack):
+def _clean_track_ids(track_ids):
     """
     Some spectrogram images might be missing as they
     failed to generate so dimensions wouldn't match
@@ -110,9 +137,8 @@ def _vstack(track_ids, y_stack):
         if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
             print(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png'))
             np.delete(track_ids, idx, 0)
-            np.delete(y_stack, idx, 1)
             dlt_cnt += 1
-    return np.vstack((track_ids, y_stack)), all_cnt, dlt_cnt
+    return track_ids, all_cnt, dlt_cnt
 
 
 def get_data():
@@ -124,14 +150,14 @@ def get_data():
     """
     meta_train_x, train_y, meta_valid_x, valid_y, meta_test_x, test_y = meta.get_metadata()
 
-    train, all_cnt, dlt_cnt = _vstack(meta_train_x, train_y)
+    train_x, all_cnt, dlt_cnt = _clean_track_ids(meta_train_x)
     print('Removed {} of {} train records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
-    test, all_cnt, dlt_cnt = _vstack(meta_test_x, test_y)
+    test_x, all_cnt, dlt_cnt = _clean_track_ids(meta_test_x)
     print('Removed {} of {} test records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
-    valid, all_cnt, dlt_cnt = _vstack(meta_valid_x, valid_y)
+    valid_x, all_cnt, dlt_cnt = _clean_track_ids(meta_valid_x)
     print('Removed {} of {} validation records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
 
-    return Dataset(train, test, valid)
+    return Dataset(train_x, train_y, test_x, test_y, valid_x, valid_y)
 
 
 if __name__ == '__main__':
@@ -143,3 +169,4 @@ if __name__ == '__main__':
     for i in range(100):
         batch = data.test.next_batch(batch_size)
         print(batch[0].shape)
+        pass
