@@ -8,41 +8,8 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.recurrent import GRU
 from keras.models import Model
 
-TF_WEIGHTS_PATH = 'https://github.com/keunwoochoi/music-auto_tagging-keras/blob/master/data/music_tagger_crnn_weights_tensorflow.h5'
 
-
-def build_keras_model(weights='msd', input_tensor=None, include_top=True):
-    """
-    Instantiate the MusicTaggerCRNN architecture,
-    optionally loading weights pre-trained
-    on Million Song Dataset. Note that when using TensorFlow,
-    for best performance you should set
-    `image_dim_ordering="tf"` in your Keras config
-    at ~/.keras/keras.json.
-    The model and the weights are compatible with both
-    TensorFlow and Theano. The dimension ordering
-    convention used by the model is the one
-    specified in your Keras config file.
-    For preparing mel-spectrogram input, see
-    `audio_conv_utils.py` in [applications](https://github.com/fchollet/keras/tree/master/keras/applications).
-    You will need to install [Librosa](http://librosa.github.io/librosa/)
-    to use it.
-    # Arguments
-        weights: one of `None` (random initialization)
-            or "msd" (pre-training on ImageNet).
-        input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)
-            to use as image input for the model.
-        include_top: whether to include the 1 fully-connected
-            layer (output layer) at the top of the network.
-            If False, the network outputs 32-dim features.
-    # Returns
-        A Keras model instance.
-    """
-    if weights not in {'msd', None}:
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization) or `msd` '
-                         '(pre-training on Million Song Dataset).')
-
+def build_model(input_tensor=None):
     input_shape = (96, 1366, 1)
 
     if input_tensor is None:
@@ -94,8 +61,8 @@ def build_keras_model(weights='msd', input_tensor=None, include_top=True):
     x = GRU(32, return_sequences=True, name='gru1')(x)
     x = GRU(32, return_sequences=False, name='gru2')(x)
     x = Dropout(0.3)(x)
-    if include_top:
-        x = Dense(50, activation='sigmoid', name='output')(x)
+
+    x = Dense(50, activation='sigmoid', name='output')(x)
 
     # Create model
     return Model(melgram_input, x)

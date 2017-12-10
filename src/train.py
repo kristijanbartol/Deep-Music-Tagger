@@ -1,5 +1,6 @@
 import tensorflow as tf
 import tensorflow.contrib.layers as layers
+import numpy as np
 
 import input_data
 import model
@@ -70,8 +71,11 @@ def train(sess, train_set, accuracy_f, train_f, loss_f, config):
                 print('Train accuracy = %.2f' % accuracy)
 
 
-def multi_output_cross_entropy(labels, logits):
-
+def multi_output_cross_entropy(labels, outputs):
+    loss_sum = 0
+    for idx, output in enumerate(outputs):
+        loss_sum += - labels[idx] * np.log(output)
+    return loss_sum / outputs.shape[0]
 
 
 if __name__ == '__main__':
@@ -82,10 +86,10 @@ if __name__ == '__main__':
     x = tf.placeholder(tf.float32, [None, img_width * img_height])
     y = tf.placeholder(tf.float32, [None, data.train.y.shape[0]])
 
-    logits = model.build_model(x, y_length, config)
+    outputs = model.build_model(input_tensor=x)
 
     with tf.name_scope('loss'):
-        cross_entropy_loss = tf.reduce_mean(tf.losses.softmax_cross_entropy(onehot_labels=y, logits=logits))
+        cross_entropy_loss = multi_output_cross_entropy(labels=y, outputs=outputs)
 
     with tf.name_scope('optimizer'):
         train_op = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy_loss)
