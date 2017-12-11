@@ -95,6 +95,14 @@ class SplitData:
             images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
         return np.array(images)
 
+    def all_loaded(self):
+        """
+        Returns all the data with loaded spectrograms.
+
+        :return images, labels:
+        """
+        return self._load_images(self.track_ids), self.labels
+
     def next_batch(self, batch_size):
         """
         Takes subset of input and output for interval
@@ -174,9 +182,8 @@ if __name__ == '__main__':
     data = get_data()
     batch_size = 100
     for i in range(100):
-        #batch = data.test.next_batch(batch_size)
-        #print(batch[0].shape)
-        pass
+        batch = data.test.next_batch(batch_size)
+        print(batch[0].shape)
 
     print(data.test.track_ids)
     data.test.shuffle()
