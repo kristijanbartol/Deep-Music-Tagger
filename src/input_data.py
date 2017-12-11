@@ -118,8 +118,11 @@ class SplitData:
         return batch_images, batch_labels
 
     def shuffle(self):
-        np.random.shuffle(self.track_ids)
-        np.random.shuffle(self.labels)
+        indices = np.arange(self.track_ids.shape[0])
+        np.random.shuffle(indices)
+
+        self.track_ids = self.track_ids[indices]
+        self.labels = self.labels[indices]
 
 
 def _clean_track_ids(track_ids):
@@ -140,7 +143,7 @@ def _clean_track_ids(track_ids):
         all_cnt += 1
         if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
             print(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png'))
-            np.delete(track_ids, idx, 0)
+            track_ids = np.delete(track_ids, idx, 0)
             dlt_cnt += 1
     return track_ids, all_cnt, dlt_cnt
 
@@ -171,6 +174,10 @@ if __name__ == '__main__':
     data = get_data()
     batch_size = 100
     for i in range(100):
-        batch = data.test.next_batch(batch_size)
-        print(batch[0].shape)
+        #batch = data.test.next_batch(batch_size)
+        #print(batch[0].shape)
         pass
+
+    print(data.test.track_ids)
+    data.test.shuffle()
+    print(data.test.track_ids)

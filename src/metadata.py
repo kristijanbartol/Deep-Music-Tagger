@@ -140,6 +140,8 @@ if __name__ == '__main__':
 
         # append zeros if track_id is shorted than six characters
         track_id = '0' * (6 - len(row[0])) + row[0]
+        if track_id == '065753':
+            print(row)
         new_df.loc[idx, 'track_id'] = track_id
 
         i += 1
