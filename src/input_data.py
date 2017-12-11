@@ -33,7 +33,7 @@ class SplitData:
         self.top_genre_significance = 0.75
         self.current_sample_idx = 0
         self.track_ids = track_ids
-        self.y = self._create_output_vector(y_top, y_all)
+        self.labels = self._create_output_vector(y_top, y_all)
 
     @staticmethod
     def _get_indices_mapping(y_all):
@@ -101,7 +101,7 @@ class SplitData:
         (current_idx : current_idx + batch_size).
 
         :param batch_size:
-        :return batch_images, batch_y:
+        :return batch_images, batch_labels:
         """
         if self.current_sample_idx + batch_size > self.track_ids.shape[0]:  # edge case when latter index is overflown
             filling_ids = random.sample(range(self.current_sample_idx),
@@ -113,9 +113,13 @@ class SplitData:
             batch_images = self._load_images(
                 self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size])
             self.current_sample_idx += batch_size
-        batch_y = self.y[self.current_sample_idx:self.current_sample_idx + batch_size]
+        batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
 
-        return batch_images, batch_y
+        return batch_images, batch_labels
+
+    def shuffle(self):
+        np.random.shuffle(self.track_ids)
+        np.random.shuffle(self.labels)
 
 
 def _clean_track_ids(track_ids):
