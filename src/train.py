@@ -64,7 +64,7 @@ def build_model(input_tensor):
 
     x = Dense(50, activation='softmax', name='output')(x)
 
-    return Model(melgram_input, x)
+    return Model(input_tensor, x)
 
 
 def multi_output_cross_entropy(labels, outputs):
