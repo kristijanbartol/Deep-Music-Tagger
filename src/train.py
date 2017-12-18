@@ -86,7 +86,7 @@ model.compile(loss=multi_output_cross_entropy, optimizer=sgd)
 
 for _ in range(10):
     batch_x, batch_y = data.train.next_batch(batch_size)
-    model.fit(batch_x, batch_y, batch_size=batch_size, epochs=1)
+    model.train_on_batch(batch_x, batch_y)
 
 x_test, y_test = data.test.all_loaded()
 score = model.evaluate(x_test, y_test, batch_size=batch_size)
