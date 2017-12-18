@@ -8,7 +8,7 @@ import metadata as meta
 spectr_template = '../in/mel-specs/{}'
 
 img_height = 96
-img_width  = 1406
+img_width  = 1366
 
 
 class Dataset:
@@ -92,6 +92,7 @@ class SplitData:
         images = []
         for track_id in track_ids:
             fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
+            print('Loading spectrogram: {}'.format(fpath))
             images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
         return np.array(images)
 
@@ -149,10 +150,12 @@ def _clean_track_ids(track_ids):
     for idx, track_id in enumerate(track_ids):
         track_id_str = str(track_id)
         all_cnt += 1
+        
         if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
             print(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png'))
-            track_ids = np.delete(track_ids, idx, 0)
+            track_ids = np.delete(track_ids, idx - dlt_cnt, 0)
             dlt_cnt += 1
+
     return track_ids, all_cnt, dlt_cnt
 
 
@@ -182,9 +185,12 @@ if __name__ == '__main__':
     data = get_data()
     batch_size = 100
     for i in range(100):
-        batch = data.test.next_batch(batch_size)
-        print(batch[0].shape)
+        #batch = data.test.next_batch(batch_size)
+        pass
 
     print(data.test.track_ids)
     data.test.shuffle()
     print(data.test.track_ids)
+
+    data.test.all_loaded()
+

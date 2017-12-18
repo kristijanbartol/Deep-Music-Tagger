@@ -108,8 +108,8 @@ def __unify_img_sizes(min_width, expected_width):
                     failed_dlt_cnt += 1
                 continue
             elif width > expected_width:
-                print('CROP | {} | {}x{} | width > expected_width ({})'
-                      .format(fpath, height, width, expected_width))
+                print('CROP | {} | {}x{} -> {}x{} | width > expected_width ({})'
+                      .format(fpath, height, width, height, expected_width, expected_width))
                 # crop to (height, expected_width) and remove third dimension (channel) to draw grayscale
                 img_as_np = np.asarray(img.getdata()).reshape(height, width, -1)[:, :expected_width, :]\
                     .reshape(height, -1)
