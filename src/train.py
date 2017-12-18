@@ -26,7 +26,7 @@ def build_model(input_tensor):
     if not K.is_keras_tensor(input_tensor):
         input_tensor = Input(tensor=input_tensor, shape=(batch_size, img_height, img_width, channels))
 
-    # TODO: (temporal fix)  After Input function call, I ran into a bug with 'None' dimension
+    # TODO: (temporal fix)  After Input function call, I ran into a bug with 'None' dimension prepended
     input_tensor._keras_shape = [dim for dim in input_tensor._keras_shape if dim is not None]
 
     # Input block
@@ -62,7 +62,8 @@ def build_model(input_tensor):
     x = Dropout(0.1, name='dropout4')(x)
 
     # (50, 1, 15, 128) -> (50, 15, 128)
-    x = tf.reshape(x, [batch_size, 15, 128])
+    # Note: target_shape does not include the batch axis.
+    x = Reshape(target_shape=(15, 128))(x)
 
     # GRU block 1, 2, output
     x = GRU(32, return_sequences=True, name='gru1')(x)
