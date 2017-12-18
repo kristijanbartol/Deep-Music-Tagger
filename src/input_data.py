@@ -104,6 +104,14 @@ class SplitData:
         """
         return self._load_images(self.track_ids), self.labels
 
+    def get_output_size(self):
+        """
+        Returns label vector length, i.e. the number of classes.
+
+        :return:
+        """
+        return self.labels.shape[1]
+
     def next_batch(self, batch_size):
         """
         Takes subset of input and output for interval
@@ -124,6 +132,7 @@ class SplitData:
             self.current_sample_idx += batch_size
         batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
 
+        print(batch_images.shape)
         return batch_images, batch_labels
 
     def shuffle(self):
