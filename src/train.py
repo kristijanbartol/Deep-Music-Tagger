@@ -78,13 +78,15 @@ def multi_output_cross_entropy(labels, outputs):
 
 
 data = input_data.get_data()
-# x_train, y_train = data.train.all_loaded()
-# x_test, y_test = data.test.all_loaded()
 
 model = build_model(K.placeholder(shape=(batch_size, img_height, img_width, channels)), data.train.get_output_size())
 
 sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss=multi_output_cross_entropy, optimizer=sgd)
 
-model.fit(data.train.next_batch(batch_size), data.train.labels, batch_size=batch_size, epochs=1)
-score = model.evaluate(data.test.next_batch(batch_size), data.test.labels, batch_size=batch_size)
+for _ in range(10):
+    batch_x, batch_y = data.train.next_batch(batch_size)
+    model.fit(batch_x, batch_y, batch_size=batch_size, epochs=1)
+
+x_test, y_test = data.test.all_loaded()
+score = model.evaluate(x_test, y_test, batch_size=batch_size)
