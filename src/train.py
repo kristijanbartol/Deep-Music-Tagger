@@ -6,7 +6,6 @@ from keras.layers import BatchNormalization, Reshape
 from keras.optimizers import SGD
 
 import numpy as np
-import tensorflow as tf
 
 import input_data
 
@@ -15,14 +14,13 @@ img_height = 96
 img_width = 1366
 channels = 1
 
-channel_axis = 3
-freq_axis = 1
 
-padding = 37
+def build_model(input_tensor, output_size):
+    channel_axis = 3
+    freq_axis = 1
+    padding = 37
 
-
-def build_model(input_tensor):
-    # Convert tf tensor to keras
+    # Convert tensor to keras tensor
     if not K.is_keras_tensor(input_tensor):
         input_tensor = Input(tensor=input_tensor, shape=(batch_size, img_height, img_width, channels))
 
@@ -70,23 +68,20 @@ def build_model(input_tensor):
     x = GRU(32, return_sequences=False, name='gru2')(x)
     x = Dropout(0.3)(x)
 
-    x = Dense(50, activation='softmax', name='output')(x)
+    x = Dense(output_size, activation='softmax', name='output')(x)
 
     return Model(input_tensor, x)
 
 
 def multi_output_cross_entropy(labels, outputs):
-    loss_sum = 0
-    for idx, output in enumerate(outputs):
-        loss_sum += - labels[idx] * np.log(output)
-        return loss_sum / outputs.shape[0]
+    return 1 / outputs.shape[0].value * (np.sum(labels * K.log(outputs)))
 
 
 data = input_data.get_data()
 # x_train, y_train = data.train.all_loaded()
 # x_test, y_test = data.test.all_loaded()
 
-model = build_model(K.placeholder(shape=(batch_size, img_height, img_width, channels)))
+model = build_model(K.placeholder(shape=(batch_size, img_height, img_width, channels)), data.train.get_output_size())
 
 sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss=multi_output_cross_entropy, optimizer=sgd)
