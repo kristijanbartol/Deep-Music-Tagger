@@ -104,6 +104,14 @@ class SplitData:
         """
         return self._load_images(self.track_ids), self.labels
 
+    def get_dataset_size(self):
+        """
+        Returns number of samples in cleaned dataset.
+
+        :return dataset_size:
+        """
+        return self.track_ids.shape[0]
+
     def get_output_size(self):
         """
         Returns label vector length, i.e. the number of classes.
@@ -132,7 +140,6 @@ class SplitData:
             self.current_sample_idx += batch_size
         batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
 
-        print(batch_images.shape)
         return batch_images, batch_labels
 
     def shuffle(self):

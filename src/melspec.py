@@ -129,20 +129,20 @@ def __unify_img_sizes(min_width, expected_width):
     return deleted_cnt, failed_dlt_cnt
 
 
-def __get_times():
+def get_times(op_start_time_, start_time_):
     current_time = time.time()
-    op_time = current_time - op_start_time
-    overall_time = current_time - start_time
+    op_time = current_time - op_start_time_
+    overall_time = current_time - start_time_
     h, m, s = int(overall_time) // 3600, (int(overall_time) % 3600) // 60, overall_time % 60
 
-    return op_time, h, m, s
+    return op_time, h, m, int(s)
 
 
 def __log(outcome):
     i = ok_cnt + fail_cnt
-    op_time, h, m, s = __get_times()
+    op_time, h, m, s = get_times(op_start_time, start_time)
     logline = '{0} | {1:.2f} seconds | {2:02d}:{3:02d}:{4:02d} | {5} | {6}/{7} [{8:.2f}%]'\
-        .format(outcome, op_time, h, m, int(s), fpath, i, nfiles, i / nfiles * 100)
+        .format(outcome, op_time, h, m, s, fpath, i, nfiles, i / nfiles * 100)
 
     print(logline)
     flogs.write(logline + '\n')
