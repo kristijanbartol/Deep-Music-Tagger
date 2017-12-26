@@ -27,3 +27,15 @@
 
 - prediction confidence: for arbitrary song (not bounded to 30s), user can demand higher confidence so you create multiple 30s spectrograms
 
+
+TODO:
+- test if storing as numpy matrices is faster than storing as images
+- test that after 1 epoch accuracy can be measured
+- implement measurements as in competition
+- plot train/valid graph (30 epochs)
+- choose optimal number of epochs for medium dataset
+
+------------------------------------------------------
+
+- implement 1D convolution
+- expand dataset

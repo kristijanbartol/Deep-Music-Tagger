@@ -5,6 +5,7 @@ from keras.layers import ZeroPadding2D, Conv2D, MaxPooling2D
 from keras.layers import BatchNormalization, Reshape
 from keras.optimizers import SGD
 
+import tensorflow as tf
 import numpy as np
 import math
 import time
@@ -12,12 +13,12 @@ import time
 import input_data
 from melspec import get_times
 
-batch_size = 5
+batch_size = 6 
 img_height = 96
 img_width = 1366
 channels = 1
 
-num_epochs = 30
+num_epochs = 1
 
 
 def build_model(output_size):
@@ -74,7 +75,7 @@ def multi_output_cross_entropy(labels, outputs):
 
 data = input_data.get_data()
 
-model = build_model(data.train.get_output_size())
+model = build_model(data.test.get_output_size())
 
 sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 print('Compiling model...')
@@ -83,11 +84,11 @@ model.compile(loss=multi_output_cross_entropy, optimizer=sgd)
 start_time = time.time()
 
 for epoch in range(num_epochs):
-    number_of_batches = int(math.ceil(data.train.get_dataset_size() / batch_size))
+    number_of_batches = int(math.ceil(data.test.get_dataset_size() / batch_size))
     data.train.shuffle()
     for i in range(number_of_batches):
         op_start_time = time.time()
-        batch_x, batch_y = data.train.next_batch(batch_size)
+        batch_x, batch_y = data.test.next_batch(batch_size)
         # import pdb
         # pdb.set_trace()
         model.train_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)

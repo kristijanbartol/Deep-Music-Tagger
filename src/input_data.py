@@ -128,17 +128,18 @@ class SplitData:
         :param batch_size:
         :return batch_images, batch_labels:
         """
-        if self.current_sample_idx + batch_size > self.track_ids.shape[0]:  # edge case when latter index is overflown
+        if self.current_sample_idx + batch_size >= self.track_ids.shape[0]:  # edge case when latter index is overflown
             filling_ids = random.sample(range(self.current_sample_idx),
-                                        self.track_ids.shape[0] - self.current_sample_idx)
+                                        batch_size - (self.track_ids.shape[0] - self.current_sample_idx))
             batch_images = self._load_images(
                 self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids])
+            batch_labels = self.labels[list(range(self.current_sample_idx, self.labels.shape[0])) + filling_ids]
             self.current_sample_idx = 0
         else:
             batch_images = self._load_images(
                 self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size])
+            batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
             self.current_sample_idx += batch_size
-        batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
 
         return batch_images, batch_labels
 
@@ -150,7 +151,7 @@ class SplitData:
         self.labels = self.labels[indices]
 
 
-def _clean_track_ids(track_ids):
+def _clean_track_ids(track_ids, labels):
     """
     Some spectrogram images might be missing as they
     failed to generate so dimensions wouldn't match
@@ -170,9 +171,10 @@ def _clean_track_ids(track_ids):
         if not os.path.isfile(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png')):
             print(spectr_template.format(track_id_str[:3] + '/' + track_id_str + '.png'))
             track_ids = np.delete(track_ids, idx - dlt_cnt, 0)
+            labels = np.delete(labels, idx - dlt_cnt, 1)
             dlt_cnt += 1
 
-    return track_ids, all_cnt, dlt_cnt
+    return track_ids, labels, all_cnt, dlt_cnt
 
 
 def get_data():
@@ -180,18 +182,22 @@ def get_data():
     Reads metadata, stacks input and output to a single object.
     Returns complex object that contain splitted set objects.
 
+    X vectors contain track ids, not spectrograms, that is why
+    they are prefixed with 'meta_' prefix.
+    Y vectors are structured as ([[top_genre], [all_genres]]).
+
     :return Dataset(train, test, valid):
     """
     meta_train_x, train_y, meta_valid_x, valid_y, meta_test_x, test_y = meta.get_metadata()
 
-    train_x, all_cnt, dlt_cnt = _clean_track_ids(meta_train_x)
+    meta_train_x, train_y, all_cnt, dlt_cnt = _clean_track_ids(meta_train_x, train_y)
     print('Removed {} of {} train records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
-    test_x, all_cnt, dlt_cnt = _clean_track_ids(meta_test_x)
+    meta_test_x, test_y, all_cnt, dlt_cnt = _clean_track_ids(meta_test_x, test_y)
     print('Removed {} of {} test records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
-    valid_x, all_cnt, dlt_cnt = _clean_track_ids(meta_valid_x)
+    meta_valid_x, valid_y, all_cnt, dlt_cnt = _clean_track_ids(meta_valid_x, valid_y)
     print('Removed {} of {} validation records => {}'.format(dlt_cnt, all_cnt, all_cnt - dlt_cnt))
 
-    return Dataset(train_x, train_y, test_x, test_y, valid_x, valid_y)
+    return Dataset(meta_train_x, train_y, meta_test_x, test_y, meta_valid_x, valid_y)
 
 
 if __name__ == '__main__':
