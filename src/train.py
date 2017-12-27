@@ -70,6 +70,7 @@ def build_model(output_size):
 
 
 def multi_output_cross_entropy(labels, outputs):
+    print(outputs)
     return 1 / outputs * (np.sum(labels * K.log(outputs)))
 
 
@@ -89,15 +90,27 @@ for epoch in range(num_epochs):
     for i in range(number_of_batches):
         op_start_time = time.time()
         batch_x, batch_y = data.test.next_batch(batch_size)
-        # import pdb
-        # pdb.set_trace()
         model.train_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
+        loss = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
 
-        # Log current position and times
+        # Log (log :)) loss, current position and times
         op_time, overall_h, overall_m, overall_s = get_times(op_start_time, start_time)
-        current_time = time.time()
-        print('epoch {0} | batch {1} / {2} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}'
-              .format(epoch + 1, i + 1, number_of_batches, op_time, overall_h, overall_m, overall_s))
+        print('epoch {0} | batch {1} / {2} | loss: {3:.2f} | {4:.2f}s | {5:02d}:{6:02d}:{7:02d}'
+              .format(epoch + 1, i + 1, number_of_batches, loss, op_time, overall_h, overall_m, overall_s))
+
+    print('\n-------\nEvaluating validation score...')
+    valid_op_start_time = time.time()
+    x_valid, y_valid = data.valid.all_loaded()
+    valid_loss = model.evaluate(x_valid.reshape(-1, img_height, img_width, channels), y_valid, batch_size)
+    op_time, h, m, s = get_times(valid_op_start_time, start_time)
+    print('epoch {0} | valid_loss: {1:.2f} | {2:.2f}s | {3:02d}:{4:02d}:{5:02d}\n-------\n'
+            .format(epoch + 1, valid_loss, op_time, h, m, s))
 
 x_test, y_test = data.test.all_loaded()
-score = model.evaluate(x_test, y_test, batch_size=batch_size)
+print('\n\n-------\n\nEvaluating test score...')
+test_op_start_time = time.time()
+test_loss = model.evaluate(x_test.reshape(-1, img_height, img_width, channels), y_test, batch_size)
+op_time, h, m, s = get_times(test_op_start_time, start_time)
+print('test_loss: {0:.2f}\n\n | {1:.2f} | {2:02d}:{3:02d}:{4:02d}-------\n'
+        .format(test_loss, op_time, h, m, s))
+

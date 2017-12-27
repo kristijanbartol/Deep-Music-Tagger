@@ -1,35 +1,16 @@
 - ideal goal: be able to say "in this part of the song there are elements of jazz, prog rock and a bit of grunge" :)
 
-- define multi-output problem as following:
-	-> first train with a single output (one-hot; take the information from genre_top column)
-	-> do not train it perfectly with a single label; transform a problem into multi-output by replacing one-hot vector with 1/number_of_genres values on each vector element
-	-> TEST: take top $k$ (real number of genres) values from output vector
-
-(*) as the number of all tags is too high to be taken as the number of output classes, you could preprocess tags and assign similarities based on number of common occurences with some threshold $p$
-
 - adjust all music samples to be more or less on the same volume level to prevent the model from learning it as a feature
-
-- try removing voice from songs and check how does it affect classification accuracy
-
-- if using 30s pieces turns out to have almost exact accuracy as full-length songs, try expanding the dataset by removing voice from songs that contain voice parts and serve these other parts of the songs as different samples with the same labels, of course (kick out instrumental?)
-	-> anyways try different techniques to expand the dataset!
-
-- try putting raw audio as input -> 1D convolution (may be helpful for generator - WaveNet)
 
 - define distance measure (or similarity measure) between songs / groups
 
-- create "informal" dataset to compare results with FMA
-
 - feed network with more than just mel-spectrogram images?
 	-> Q: how much information does mel-spectrogram contain (do faster songs end up not being converted with enough details?)?
-
-- extend FMA to have more data
 
 - prediction confidence: for arbitrary song (not bounded to 30s), user can demand higher confidence so you create multiple 30s spectrograms
 
 
 TODO:
-- test if storing as numpy matrices is faster than storing as images
 - test that after 1 epoch accuracy can be measured
 - implement measurements as in competition
 - plot train/valid graph (30 epochs)
@@ -37,5 +18,12 @@ TODO:
 
 ------------------------------------------------------
 
+Crowd AI competition adaptation:
+- switch to forked repository
+- convert problem to regular multi-class classification
+- don't use metadata directly to get track ids and genres
+
+------------------------------------------------------
+
 - implement 1D convolution
-- expand dataset
+- expand medium dataset
