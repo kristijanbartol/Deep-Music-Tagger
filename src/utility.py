@@ -9,5 +9,17 @@ class Logger:
     Underline = '\033[4m'
     ENDC = '\033[0m'
 
-    def log(self, type, msg):
+    log_lines = []
+
+    def color_print(self, type, msg):
         print (type + msg + self.ENDC)
+        self._add_log_line(msg)
+
+    def _add_log_line(self, line):
+        self.log_lines.append(line)
+
+    def dump(self, fpath):
+        with open(fpath, 'w') as dump_file:
+            for line in self.log_lines:
+                dump_file.write(line)
+

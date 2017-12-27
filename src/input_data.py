@@ -3,12 +3,27 @@ import os
 import random
 from PIL import Image
 
+import math
+
 import metadata as meta
 
 spectr_template = '../in/mel-specs/{}'
 
 img_height = 96
 img_width  = 1366
+
+idx_map = dict()
+
+
+def _create_indices_mapping(train_y_all, valid_y_all, test_y_all):
+    indices = []
+    for genre_list in np.hstack((train_y_all, valid_y_all, test_y_all)):
+        for genre_id in genre_list:
+            if genre_id not in indices:
+                indices.append(genre_id)
+    indices = sorted(indices)
+    for i, index in enumerate(indices):
+        idx_map[index] = i
 
 
 class Dataset:
@@ -18,9 +33,10 @@ class Dataset:
     """
 
     def __init__(self, train_x, train_y, valid_x, valid_y, test_x, test_y):
-        self.train = SplitData(train_x, train_y[0], train_y[1])
-        self.valid = SplitData(valid_x, valid_y[0], valid_y[1])
-        self.test = SplitData(test_x, test_y[0], test_y[1])
+        _create_indices_mapping(train_y[1], valid_y[1], test_y[1])
+        self.train = SplitData(train_x, train_y[0], train_y[1], 'train')
+        self.valid = SplitData(valid_x, valid_y[0], valid_y[1], 'valid')
+        self.test = SplitData(test_x, test_y[0], test_y[1], 'test')
 
 
 class SplitData:
@@ -29,24 +45,12 @@ class SplitData:
     for each batch and assigns expected values to output vector y.
     """
 
-    def __init__(self, track_ids, y_top, y_all):
+    def __init__(self, track_ids, y_top, y_all, dataset_label):
         self.top_genre_significance = 0.75
         self.current_sample_idx = 0
         self.track_ids = track_ids
         self.labels = self._create_output_vector(y_top, y_all)
-
-    @staticmethod
-    def _get_indices_mapping(y_all):
-        indices = []
-        for genre_list in y_all:
-            for genre_id in genre_list:
-                if genre_id not in indices:
-                    indices.append(genre_id)
-        indices = sorted(indices)
-        indices_map = dict()
-        for i, index in enumerate(indices):
-            indices_map[index] = i
-        return indices_map
+        self.dataset_label = dataset_label
 
     def _create_output_vector(self, y_top, y_all):
         """
@@ -63,26 +67,26 @@ class SplitData:
         :return y:
         """
 
-        idx_map = self._get_indices_mapping(y_all)
-
         # dim(y) = (number_of_samples, number_of_unique_indices)
         y = []
         vsize = len(idx_map)
         for i in range(y_top.shape[0]):
             yi = [0] * vsize
-            yi[idx_map[y_top[i]]] = self.top_genre_significance if len(y_all[i]) > 1 else 1
+            if len(y_all[i]) == 1:
+                yi[idx_map[y_top[i]]] = 1
+            else:
+                yi[idx_map[y_top[i]]] = self.top_genre_significance
 
-            other_genres_significance = (1 - self.top_genre_significance) / max(1, len(y_all[i]) - 1)
-            for genre_id in y_all[i]:
-                if genre_id == y_top[i]:
-                    continue
-                yi[idx_map[genre_id]] = other_genres_significance
+                other_genres_significance = (1 - self.top_genre_significance) / (len(y_all[i]) - 1)
+                for genre_id in y_all[i]:
+                    if genre_id == y_top[i]:
+                        continue
+                    yi[idx_map[genre_id]] = other_genres_significance
             y.append(yi)
 
         return np.array(y)
 
-    @staticmethod
-    def _load_images(track_ids):
+    def _load_images(self, track_ids):
         """
         Private method for actual loading spectrogram data.
 
@@ -92,7 +96,7 @@ class SplitData:
         images = []
         for track_id in track_ids:
             fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
-            print('Loading spectrogram: {}'.format(fpath))
+            print('Loading spectrogram: {} ({})'.format(fpath, self.dataset_label))
             images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
         return np.array(images)
 
@@ -104,13 +108,11 @@ class SplitData:
         """
         return self._load_images(self.track_ids), self.labels
 
-    def get_dataset_size(self):
+    def get_number_of_batches(self, batch_size):
         """
-        Returns number of samples in cleaned dataset.
-
-        :return dataset_size:
+        :return number_of_batches:
         """
-        return self.track_ids.shape[0]
+        return int(math.ceil(self.track_ids.shape[0] / batch_size))
 
     def get_output_size(self):
         """

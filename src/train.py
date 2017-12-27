@@ -3,15 +3,17 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, ELU, GRU
 from keras.layers import ZeroPadding2D, Conv2D, MaxPooling2D
 from keras.layers import BatchNormalization, Reshape
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 
 import tensorflow as tf
 import numpy as np
-import math
 import time
 
 import input_data
 from melspec import get_times
+from utility import Logger
+
+logs_template = '../out/logs/{}'
 
 batch_size = 6 
 img_height = 96
@@ -69,48 +71,61 @@ def build_model(output_size):
     return model
 
 
-def multi_output_cross_entropy(labels, outputs):
-    print(outputs)
-    return 1 / outputs * (np.sum(labels * K.log(outputs)))
+def batched_evaluate(dataset, batch_size=batch_size):
+    loss = 0
+    for _ in range(dataset.get_number_of_batches(batch_size)):
+        batch_x, batch_y = dataset.next_batch(batch_size)
+        loss += model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
+    return loss
 
 
 data = input_data.get_data()
 
-model = build_model(data.test.get_output_size())
+model = build_model(data.train.get_output_size())
 
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+#sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+adam = Adam(lr=8e-4, decay=0.91)
+
 print('Compiling model...')
-model.compile(loss=multi_output_cross_entropy, optimizer=sgd)
+model.compile(loss='categorical_crossentropy', optimizer=adam)
 
 start_time = time.time()
+logger = Logger()
 
 for epoch in range(num_epochs):
-    number_of_batches = int(math.ceil(data.test.get_dataset_size() / batch_size))
     data.train.shuffle()
+    number_of_batches = data.train.get_number_of_batches(batch_size)
     for i in range(number_of_batches):
         op_start_time = time.time()
-        batch_x, batch_y = data.test.next_batch(batch_size)
+        batch_x, batch_y = data.train.next_batch(batch_size)
         model.train_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
-        loss = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
 
         # Log (log :)) loss, current position and times
         op_time, overall_h, overall_m, overall_s = get_times(op_start_time, start_time)
-        print('epoch {0} | batch {1} / {2} | loss: {3:.2f} | {4:.2f}s | {5:02d}:{6:02d}:{7:02d}'
-              .format(epoch + 1, i + 1, number_of_batches, loss, op_time, overall_h, overall_m, overall_s))
+        if (i + 1) % 50 == 0:
+            loss = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
+            logger.color_print(logger.Info,
+                    'epoch {0} | batch {1} / {2} | loss: {3:.2f} | {4:.2f}s | {5:02d}:{6:02d}:{7:02d}'
+                    .format(epoch + 1, i + 1, number_of_batches, loss, op_time, overall_h, overall_m, overall_s))
+        else:
+            print('epoch {0} | batch {1} / {2} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}'
+                    .format(epoch + 1, i + 1, number_of_batches, op_time, overall_h, overall_m, overall_s))
 
-    print('\n-------\nEvaluating validation score...')
-    valid_op_start_time = time.time()
-    x_valid, y_valid = data.valid.all_loaded()
-    valid_loss = model.evaluate(x_valid.reshape(-1, img_height, img_width, channels), y_valid, batch_size)
-    op_time, h, m, s = get_times(valid_op_start_time, start_time)
-    print('epoch {0} | valid_loss: {1:.2f} | {2:.2f}s | {3:02d}:{4:02d}:{5:02d}\n-------\n'
-            .format(epoch + 1, valid_loss, op_time, h, m, s))
+    logger.color_print(logger.Info, '\n-------\nEvaluating validation score...')
+    # Using batches because it's intensive to load the whole validation set
+    op_start_time = time.time()
+    valid_loss = batched_evaluate(data.valid)
+    op_time, h, m,s = get_times(op_start_time, start_time)
+    logger.color_print(logger.Info, 
+            'epoch {0} | valid_loss: {1:.2f} | {2:.2f}s | {3:02d}:{4:02d}:{5:02d}\n-------\n'
+            .format(epoch + 1, valid_loss / data.valid.get_number_of_batches(batch_size), op_time, h, m, s))
 
-x_test, y_test = data.test.all_loaded()
-print('\n\n-------\n\nEvaluating test score...')
-test_op_start_time = time.time()
-test_loss = model.evaluate(x_test.reshape(-1, img_height, img_width, channels), y_test, batch_size)
-op_time, h, m, s = get_times(test_op_start_time, start_time)
-print('test_loss: {0:.2f}\n\n | {1:.2f} | {2:02d}:{3:02d}:{4:02d}-------\n'
-        .format(test_loss, op_time, h, m, s))
+logger.color_print(logger.Info, '\n\n-------\n\nEvaluating test score...')
+op_start_time = time.time()
+test_loss = batched_evaluate(data.test)
+op_time, h, m,s = get_times(op_start_time, start_time)
+logger.color_print(logger.Success, '\n-------\ntest_loss: {0:.2f} | {1:.2f}s | {2:02d}:{3:02d}:{4:02d}\n-------\n'
+        .format(test_loss / data.test.get_number_of_batches(batch_size), op_time, h, m, s))
+
+logger.dump(logs_template.format('train.log'))
 
