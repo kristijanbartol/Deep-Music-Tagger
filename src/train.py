@@ -83,14 +83,14 @@ data = input_data.get_data()
 
 model = build_model(data.train.get_output_size())
 
-#sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-adam = Adam(lr=8e-4, decay=0.91)
+# Decaying by factor of ~0.91 after each epoch
+adam = Adam(lr=8e-4, decay=0.9999714)
 
 print('Compiling model...')
 model.compile(loss='categorical_crossentropy', optimizer=adam)
 
 start_time = time.time()
-logger = Logger()
+logger = Logger(batch_size, num_epochs, start_time)
 
 for epoch in range(num_epochs):
     data.train.shuffle()
