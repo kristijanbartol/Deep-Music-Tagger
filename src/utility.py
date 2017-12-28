@@ -1,3 +1,10 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+train_plt_path = '../out/graphs/training.pdf'
+
+
 class Logger:
 
     Header = '\033[95m'
@@ -27,8 +34,8 @@ class Logger:
         self.log_lines = []
 
 
-def plot_training_progress(save_dir, data):
-    fig, ((ax1, ax2)) = plt.subplots(2, 1, figsize=(16, 8))
+def plot_training_progress(data):
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 8))
 
     linewidth = 2
     legend_size = 10
@@ -43,12 +50,15 @@ def plot_training_progress(save_dir, data):
     ax1.plot(x_data, data['valid_loss'], marker='o', color=val_color,
              linewidth=linewidth, linestyle='-', label='validation')
     ax1.legend(loc='upper right', fontsize=legend_size)
-    ax2.set_title('Learning rate')
-    ax2.plot(x_data, data['lr'], marker='o', color=train_color,
-             linewidth=linewidth, linestyle='-', label='learning_rate')
+    ax2.set_title('F1-score')
+    ax2.plot(x_data, data['f1_score'], marker='o', color=train_color,
+             linewidth=linewidth, linestyle='-', label='f1_score')
     ax2.legend(loc='upper left', fontsize=legend_size)
+    ax3.set_title('Learning rate')
+    ax3.plot(x_data, data['lr'], marker='o', color=train_color,
+             linewidth=linewidth, linestyle='-', label='learning_rate')
+    ax3.legend(loc='upper left', fontsize=legend_size)
 
-    save_path = os.path.join(save_dir, 'training_plot.pdf')
+    save_path = os.path.join(train_plt_path, 'training_plot.pdf')
     print('Plotting in: ', save_path)
     plt.savefig(save_path)
-
