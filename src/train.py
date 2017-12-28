@@ -13,7 +13,7 @@ import input_data
 from melspec import get_times
 from utility import Logger
 
-logs_template = '../out/logs/{}'
+logs_path = '../out/logs/train.log'
 
 batch_size = 6 
 img_height = 96
@@ -21,6 +21,18 @@ img_width = 1366
 channels = 1
 
 num_epochs = 1
+
+# Decaying by factor of ~0.91 after each epoch (for batch_size 6)
+lr_starting = 8e-4
+lr_decay = 0.9999714
+
+start_time = time.time()
+logger = Logger(batch_size, num_epochs, start_time)
+plot_data = dict()
+plot_data['train_loss'] = []
+plot_data['valid_loss'] = []
+plot_data['f1_score'] = []
+plot_data['lr'] = []
 
 
 def build_model(output_size):
@@ -71,26 +83,35 @@ def build_model(output_size):
     return model
 
 
-def batched_evaluate(dataset, batch_size=batch_size):
+def batched_evaluate(dataset):
     loss = 0
     for _ in range(dataset.get_number_of_batches(batch_size)):
         batch_x, batch_y = dataset.next_batch(batch_size)
-        loss += model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
+        loss += model.test_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
     return loss
+
+
+def log_score(data):
+    logger.color_print(logger.Info, '\n-------\nEvaluating {} score...'.format(data.dataset_label))
+    op_start_time = time.time()
+    # Using batches to evaluate as it's intensive to load the whole set at once
+    loss = batched_evaluate(data)
+    op_time, h, m, s = get_times(op_start_time, start_time)
+    logger.color_print(logger.Info,
+            'epoch {0} | {1}_loss: {1:.2f} | {2:.2f}s | {3:02d}:{4:02d}:{5:02d}\n-------\n'
+            .format(epoch + 1, data.dataset_label, valid_loss / data.valid.get_number_of_batches(batch_size), op_time, h, m, s))
+    if data.dataset_label is not 'test':
+        plot_data['{}_loss'.format(data.dataset_label)] += [loss]
 
 
 data = input_data.get_data()
 
 model = build_model(data.train.get_output_size())
 
-# Decaying by factor of ~0.91 after each epoch
-adam = Adam(lr=8e-4, decay=0.9999714)
+adam = Adam(lr=lr_starting, decay=lr_decay)
 
 print('Compiling model...')
 model.compile(loss='categorical_crossentropy', optimizer=adam)
-
-start_time = time.time()
-logger = Logger(batch_size, num_epochs, start_time)
 
 for epoch in range(num_epochs):
     data.train.shuffle()
@@ -111,14 +132,12 @@ for epoch in range(num_epochs):
             print('epoch {0} | batch {1} / {2} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}'
                     .format(epoch + 1, i + 1, number_of_batches, op_time, overall_h, overall_m, overall_s))
 
-    logger.color_print(logger.Info, '\n-------\nEvaluating validation score...')
-    # Using batches because it's intensive to load the whole validation set
-    op_start_time = time.time()
-    valid_loss = batched_evaluate(data.valid)
-    op_time, h, m,s = get_times(op_start_time, start_time)
-    logger.color_print(logger.Info, 
-            'epoch {0} | valid_loss: {1:.2f} | {2:.2f}s | {3:02d}:{4:02d}:{5:02d}\n-------\n'
-            .format(epoch + 1, valid_loss / data.valid.get_number_of_batches(batch_size), op_time, h, m, s))
+    log_score(data.train)
+    log_score(data.valid)
+    current_lr = lr_starting * (lr_decay ** data.train.get_number_of_batches(batch_size)) ** (epoch + 1)
+    logger.color_print(logger.Info, 'Current learning rate: {}'.format(current_lr))
+    plot_data['lr'] = current_lr
+    logger.dump(logs_path)
 
 logger.color_print(logger.Info, '\n\n-------\n\nEvaluating test score...')
 op_start_time = time.time()
@@ -126,6 +145,4 @@ test_loss = batched_evaluate(data.test)
 op_time, h, m,s = get_times(op_start_time, start_time)
 logger.color_print(logger.Success, '\n-------\ntest_loss: {0:.2f} | {1:.2f}s | {2:02d}:{3:02d}:{4:02d}\n-------\n'
         .format(test_loss / data.test.get_number_of_batches(batch_size), op_time, h, m, s))
-
-logger.dump(logs_template.format('train.log'))
 

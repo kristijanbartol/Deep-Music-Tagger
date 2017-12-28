@@ -24,6 +24,7 @@ class Logger:
         with open(fpath, 'w') as dump_file:
             for line in self.log_lines:
                 dump_file.write(line + '\n')
+        self.log_lines = []
 
 
 def plot_training_progress(save_dir, data):
