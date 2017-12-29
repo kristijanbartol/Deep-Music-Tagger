@@ -1,9 +1,5 @@
 # Deep Music Classifier
 
-## Note
-
-Beware that this is project is **in progress**, but is regurarly updated, as well as this README. If you urge to get some information, please feel free to contact me on *kristijan.bartol@gmail.com* or *kb47186@fer.hr*.
-
 ## About
 
 The ideal goal of this project is to be able to say "This part of the song has the elements of jazz, progressive rock and a bit of grunge.". This could be possible to achieve defining the problem as multi-output classification.
@@ -44,7 +40,7 @@ Top 16 genres distribution is shown in the following histogram: ![Genres histogr
 
 4. Generate relevant metadata running ![metadata.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/metadata.py) as main module.
 
-5. 
+5. Run ![train.py](https://github.com/kristijanbartol/Deep-Music-Tagger/blob/master/src/train.py) to build, compile and train a keras model (CRNN architecture mentioned above).
 
 Project structure:
 
@@ -75,7 +71,11 @@ Project structure:
 	
 ## Results
 
-The model is not tested yet...
+I still didn't run the whole training process...
+
+## CrowdAI competition (music genre classification - 16 classes)
+
+Source code for this project also contains separate folder for [CrowdAI competition](https://www.crowdai.org/challenges/www-2018-challenge-learning-to-recognize-musical-genre). Main focus of this project in the next 60 days will be gaining better position on the leaderboard.
 
 ## Relevant literature
 
