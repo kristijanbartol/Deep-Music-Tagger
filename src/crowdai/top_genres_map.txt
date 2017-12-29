@@ -1,0 +1,16 @@
+3, Blues
+5, Classical
+9, Country
+13, Easy Listening
+15, Electronic
+38, Experimental
+17, Folk
+21, Hip-Hop
+1234, Instrumental
+2, International
+4, Jazz
+8, Old-Time / Historic
+10, Pop
+12, Rock
+14, Soul-RnB
+20, Spoken

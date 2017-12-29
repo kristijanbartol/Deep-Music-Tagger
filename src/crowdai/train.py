@@ -11,9 +11,9 @@ from melspec import get_times
 from utility import Logger
 from utility import plot_training_progress
 
-logs_path = '../out/logs/train.log'
+logs_path = '../../out/logs/train.log'
 
-batch_size = 6 
+batch_size = 6
 img_height = 96
 img_width = 1366
 channels = 1
@@ -111,7 +111,7 @@ def log_score(data, iter_limit=None):
 
 data = data.get_data()
 
-model = build_model(data.train.get_output_size())
+model = build_model(data.number_of_classes)
 
 adam = Adam(lr=lr_starting, decay=lr_decay)
 
@@ -138,8 +138,8 @@ for epoch in range(num_epochs):
                   .format(epoch + 1, i + 1, number_of_batches, op_time, overall_h, overall_m, overall_s))
 
     # Approximate train log score with ~1/4 dataset size for efficiency
-    #log_score(data.train, iter_limit=data.train.get_number_of_batches(batch_size) // 4)
-    #log_score(data.valid)
+    log_score(data.train, iter_limit=data.train.get_number_of_batches(batch_size) // 4)
+    log_score(data.valid)
     current_lr = lr_starting * (lr_decay ** data.train.get_number_of_batches(batch_size)) ** (epoch + 1)
     logger.color_print(logger.Info, 'Current learning rate: {}'.format(current_lr))
     plot_data['train_loss'] = 0
