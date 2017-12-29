@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+import time
+
 train_plt_path = '../out/graphs/training.pdf'
 
 
@@ -57,6 +59,22 @@ class Logger:
         self.log_lines = []
 
 
+def save_scores(data, scores_path):
+    """
+    Saves train loss, valid loss, f1-score and current learning rate
+    to a file on provided path. This information can be used to make
+    plots afterwards or to determine the optimal epoch to make prediction.
+
+    :param data: dictionary with known keys
+    :param scores_path:
+    :return:
+    """
+    with open(scores_path, 'a') as fscores:
+        for i in range(len(data['train_loss'])):
+            fscores.write('{} | {} | {} | {} | {}\n'
+                          .format(i, data['train_loss'][i], data['valid_loss'][i], data['f1_score'][i], data['lr'][i]))
+
+
 def plot_training_progress(data):
     """
     This doesn't work for me when I run the whole thing in terminal,
@@ -94,17 +112,6 @@ def plot_training_progress(data):
     plt.savefig(save_path)
 
 
-def save_scores(data, scores_path):
-    """
-    Saves train loss, valid loss, f1-score and current learning rate
-    to a file on provided path. This information can be used to make
-    plots afterwards or to determine the optimal epoch to make prediction.
-
-    :param data: dictionary with known keys
-    :param scores_path:
-    :return:
-    """
-    with open(scores_path, 'a') as fscores:
-        for i in range(len(data['train_loss'])):
-            fscores.write('{} | {} | {} | {} | {}\n'.format(i + 1, data['train_loss'][i], data['valid_loss'][i], data['f1_score'][i], data['lr'][i]))
-
+def save_prediction(data, predict, prediction_path):
+    with open(prediction_path) as fprediction:
+        fprediction.write(str(predict(data)))

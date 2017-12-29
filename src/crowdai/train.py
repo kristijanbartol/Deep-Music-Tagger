@@ -10,12 +10,12 @@ import numpy as np
 import data
 from melspec import get_times
 from utility import Logger
-from utility import plot_training_progress, save_scores
+from utility import plot_training_progress, save_scores, save_prediction
 
 session_path = '../../out/logs/session.log'
-predicts_template = '../../out/predicts/aicrowd/{}_{}_{}_{}_{}.out'
-save_model_template = '../../out/models/aicrowd/{}_{}_{}_{}_{}.h5'
-scores_template = '../../out/scores/aicrowd/scores.out'
+predicts_template = '../../out/predictions/crowdai/predict_{}_{}_{}_{}_{}.out'
+save_model_template = '../../out/models/crowdai/model_{}_{}_{}_{}_{}.h5'
+scores_template = '../../out/scores/crowdai/scores_{}_{}_{}_{}_{}.out'
 
 batch_size = 6
 img_height = 96
@@ -30,14 +30,14 @@ lr_decay = 0.9999714
 
 start_time = time.time()
 logger = Logger(batch_size, num_epochs)
-plot_data = dict()
-plot_data['train_loss'] = []
-plot_data['valid_loss'] = []
-plot_data['f1_score'] = []
-plot_data['lr'] = []
+score_data = dict()
+score_data['train_loss'] = []
+score_data['valid_loss'] = []
+score_data['f1_score'] = []
+score_data['lr'] = []
 
-optimizers = { 'sgd': keras.optimizers.SGD(lr=0.001, momentum=0.9, nesterov=True),
-        'adam': Adam(lr=lr_starting, decay=lr_decay) }
+optimizers = {'sgd': SGD(lr=0.001, momentum=0.9, nesterov=True),
+              'adam': Adam(lr=lr_starting, decay=lr_decay)}
 
 
 def build_model(output_size):
@@ -89,8 +89,6 @@ def build_model(output_size):
 
 
 def batched_evaluate(dataset, iter_limit):
-    print(dataset.get_number_of_batches(batch_size))
-    print(iter_limit)
     loss = 0
     # Limit number of evaluated batches
     iter_range = range(dataset.get_number_of_batches(batch_size))
@@ -110,11 +108,19 @@ def evaluate(data, iter_limit=None):
     loss = evaluated / data.get_number_of_batches(batch_size) if iter_limit is None else evaluated / iter_limit
 
     op_time, h, m, s = get_times(op_start_time, start_time)
-    logger.color_print(logger.Info, 
-            '\n-------\nepoch {0} | {1}_loss: {2:.2f} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}\n-------\n'
-            .format(epoch + 1, data.dataset_label, loss, op_time, h, m, s))
+    logger.color_print(logger.Info,
+                       '\n-------\nepoch {0} | {1}_loss: {2:.2f} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}\n-------\n'
+                       .format(epoch + 1, data.dataset_label, loss, op_time, h, m, s))
     if data.dataset_label is not 'test':
-        plot_data['{}_loss'.format(data.dataset_label)] += [loss]
+        score_data['{}_loss'.format(data.dataset_label)] += [loss]
+
+
+def batched_predict(data):
+    predictions = []
+    for _ in data.test.get_number_of_batches(batch_size):
+        batch_x, _ = data.test.next_batch(batch_size)
+        predictions.append(model.predict(batch_x))
+    return predictions
 
 
 data = data.get_data()
@@ -125,7 +131,7 @@ opt_name = 'adam'
 optimizer = optimizers[opt_name]
 
 print('Compiling model...')
-model.compile(loss='categorical_crossentropy', optimizer=adam)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
 for epoch in range(num_epochs):
     data.train.shuffle()
@@ -152,29 +158,13 @@ for epoch in range(num_epochs):
 
     current_lr = lr_starting * (lr_decay ** data.train.get_number_of_batches(batch_size)) ** (epoch + 1)
     logger.color_print(logger.Info, 'Current learning rate: {}'.format(current_lr))
-    plot_data['lr'] += [current_lr]
-    plot_data['f1_score'] = 0   # TODO
+    score_data['lr'] += [current_lr]
+    score_data['f1_score'] += [0]   # TODO
 
-    #plot_training_progress(plot_data)  # TODO
-    save_scores(plot_data, scores_template.format(epoch, batch_size))
+    #plot_training_progress(score_data)  # TODO
+    save_scores(score_data, scores_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
     model.save(save_model_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
+    save_prediction(data, batched_predict, predicts_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
     logger.dump(session_path)
 
 evaluate(data.test)
-
-def batched_prediction(test_set):
-    predictions = np.empty(shape=(0))
-    for _ in test_set.get_number_of_batches(batch_size):
-        batch_x, _ = test_set.next_batch(batch_size)
-        predictions.hstack(model.predict(batch_x))
-    return predictions.tolist()
-
-def save_prediction(test_data, epoch, batch_size, opt_name, lr_starting, lr_decay):
-    with open(predicts_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)) as fprediciton:
-        fprediction.write(str(batched_prediction(test_data)))
-
-save_prediction(data.test, epoch, batch_size, opt_name, lr_starting, lr_decay)
-
-with open('predict_dump.out', 'a') as fprediction:
-    fprediction.write(str(batched_prediction(data.test)))
-
