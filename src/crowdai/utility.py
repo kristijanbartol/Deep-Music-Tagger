@@ -30,7 +30,7 @@ class Logger:
         :param epochs:
         :return:
         """
-        first_line = 'Batch size: {} | Epochs: {} | Learning rate: {} | Started: {}\n'\
+        first_line = '\n=======\nBatch size: {} | Epochs: {} | Learning rate: {} | Started: {}\n'\
             .format(batch_size, epochs, lr, time.strftime("%H:%M:%S"))
         self.log_lines = [first_line]
 
@@ -54,7 +54,7 @@ class Logger:
         """
         Writes all the logged lines to file with given path and empties list.
         """
-        with open(dump_path, 'w') as dump_file:
+        with open(dump_path, 'a') as dump_file:
             for line in self.log_lines:
                 dump_file.write(line + '\n')
         self.log_lines = []
@@ -115,5 +115,5 @@ def plot_training_progress(data):
 
 
 def save_prediction(data, predict, prediction_path):
-    with open(prediction_path, 'a') as fprediction:
+    with open(prediction_path, 'w') as fprediction:
         fprediction.write(str(predict(data)))

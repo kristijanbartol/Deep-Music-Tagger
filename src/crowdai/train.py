@@ -9,10 +9,9 @@ import time
 import data
 from melspec import get_times
 from utility import Logger
-from utility import plot_training_progress, save_scores, save_prediction
+from utility import plot_training_progress, save_scores 
 
 session_path = '../../out/logs/session.log'
-predicts_template = '../../out/predictions/crowdai/predict_{}_{}_{}_{}_{}.out'
 save_model_template = '../../out/models/crowdai/model_{}_{}_{}_{}_{}.h5'
 scores_template = '../../out/scores/crowdai/scores_{}_{}_{}_{}_{}.out'
 
@@ -113,14 +112,6 @@ def evaluate(data, samples):
     logger.dump(session_path)
 
 
-def batched_predict(data):
-    predictions = []
-    for _ in range(data.test.get_number_of_batches(batch_size)):
-        batch_x, _ = data.test.next_batch(batch_size, mode='silent')
-        predictions.append(model.predict(batch_x.reshape(-1, img_height, img_width, channels)))
-    return predictions
-
-
 def get_lr(batch):
     return lr_starting * (lr_decay ** batch) ** (epoch + 1)
 
@@ -168,8 +159,5 @@ for epoch in range(num_epochs):
     save_model_path = save_model_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)
     print('Saving current model state with all parameters to {}'.format(save_model_path))
     model.save(save_model_path)
-    predicts_path = predicts_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)
-    print('Making prediction using current model and saving it to {}'.format(predicts_path))
-    save_prediction(data, batched_predict, predicts_path)
 
 evaluate(data.test, data.test.get_number_of_batches(batch_size))
