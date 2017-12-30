@@ -21,7 +21,7 @@ img_height = 96
 img_width = 1366
 channels = 1
 
-num_epochs = 1
+num_epochs = 30
 
 # Decaying by factor of ~0.91 after each epoch (for batch_size 6)
 lr_starting = 9e-4
@@ -137,10 +137,10 @@ model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
 for epoch in range(num_epochs):
     data.train.shuffle()
-    number_of_batches = data.test.get_number_of_batches(batch_size)
+    number_of_batches = data.train.get_number_of_batches(batch_size)
     for i in range(number_of_batches):
         op_start_time = time.time()
-        batch_x, batch_y = data.test.next_batch(batch_size, mode='silent')
+        batch_x, batch_y = data.train.next_batch(batch_size, mode='silent')
         model.train_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
 
         # Log (log :)) loss, current position and times
