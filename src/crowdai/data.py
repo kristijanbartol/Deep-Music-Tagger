@@ -76,7 +76,7 @@ class SplitData:
 
         return np.eye(MultiClassDataset.number_of_classes)[_transform_idx(y_top)]
 
-    def _load_images(self, track_ids):
+    def _load_images(self, track_ids, mode=None):
         """
         Private method for actual loading spectrogram data.
 
@@ -86,7 +86,8 @@ class SplitData:
         images = []
         for track_id in track_ids:
             fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
-            print('Loading spectrogram: {} ({})'.format(fpath, self.dataset_label))
+            if mode != 'silent':
+                print('Loading spectrogram: {} ({})'.format(fpath, self.dataset_label))
             images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
         return np.array(images)
 
@@ -104,7 +105,7 @@ class SplitData:
         """
         return int(math.ceil(self.track_ids.shape[0] / batch_size))
 
-    def next_batch(self, batch_size):
+    def next_batch(self, batch_size, mode):
         """
         Takes subset of input and output for interval
         (current_idx : current_idx + batch_size).
@@ -116,12 +117,12 @@ class SplitData:
             filling_ids = random.sample(range(self.current_sample_idx),
                                         batch_size - (self.track_ids.shape[0] - self.current_sample_idx))
             batch_images = self._load_images(
-                self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids])
+                self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids], mode)
             batch_labels = self.labels[list(range(self.current_sample_idx, self.labels.shape[0])) + filling_ids]
             self.current_sample_idx = 0
         else:
             batch_images = self._load_images(
-                self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size])
+                self.track_ids[self.current_sample_idx:self.current_sample_idx + batch_size], mode)
             batch_labels = self.labels[self.current_sample_idx:self.current_sample_idx + batch_size]
             self.current_sample_idx += batch_size
 

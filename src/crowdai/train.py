@@ -5,7 +5,6 @@ from keras.layers import BatchNormalization, Reshape
 from keras.optimizers import SGD, Adam
 
 import time
-import numpy as np
 
 import data
 from melspec import get_times
@@ -25,11 +24,11 @@ channels = 1
 num_epochs = 1
 
 # Decaying by factor of ~0.91 after each epoch (for batch_size 6)
-lr_starting = 8e-4
+lr_starting = 9e-4
 lr_decay = 0.9999714
 
 start_time = time.time()
-logger = Logger(batch_size, num_epochs)
+logger = Logger(batch_size, num_epochs, lr_starting)
 score_data = dict()
 score_data['train_loss'] = []
 score_data['valid_loss'] = []
@@ -88,39 +87,42 @@ def build_model(output_size):
     return model
 
 
-def batched_evaluate(dataset, iter_limit):
+def batched_evaluate(dataset, samples):
     loss = 0
-    # Limit number of evaluated batches
-    iter_range = range(dataset.get_number_of_batches(batch_size))
-    if iter_limit is not None:
-        iter_range = range(iter_limit)
-    for _ in iter_range:
-        batch_x, batch_y = dataset.next_batch(batch_size)
+    for _ in range(samples):
+        batch_x, batch_y = dataset.next_batch(batch_size, mode='silent')
         loss += model.test_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
     return loss
 
 
-def evaluate(data, iter_limit=None):
-    logger.color_print(logger.Info, '\n-------\nEvaluating {} score...'.format(data.dataset_label))
+def evaluate(data, samples):
+    logger.color_print(logger.Bold, '\n-------\nEvaluating {} score ({} samples)...'.format(data.dataset_label, samples))
     op_start_time = time.time()
     # Using batches to evaluate as it's intensive to load the whole set at once
-    evaluated = batched_evaluate(data, iter_limit)
-    loss = evaluated / data.get_number_of_batches(batch_size) if iter_limit is None else evaluated / iter_limit
+    loss = batched_evaluate(data, samples) / samples
 
     op_time, h, m, s = get_times(op_start_time, start_time)
-    logger.color_print(logger.Info,
-                       '\n-------\nepoch {0} | {1}_loss: {2:.2f} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}\n-------\n'
-                       .format(epoch + 1, data.dataset_label, loss, op_time, h, m, s))
+    logger_level = logger.Bold
     if data.dataset_label is not 'test':
         score_data['{}_loss'.format(data.dataset_label)] += [loss]
+    else:
+        logger_level = logger.Success
+    logger.color_print(logger_level,
+                       '\n-------\nepoch {} | {}_loss: {:.2f} | {:.2f}s | {:02d}:{:02d}:{:02d}\n-------\n'
+                       .format(epoch + 1, data.dataset_label, loss, op_time, h, m, s))
+    logger.dump(session_path)
 
 
 def batched_predict(data):
     predictions = []
-    for _ in data.test.get_number_of_batches(batch_size):
-        batch_x, _ = data.test.next_batch(batch_size)
-        predictions.append(model.predict(batch_x))
+    for _ in range(data.test.get_number_of_batches(batch_size)):
+        batch_x, _ = data.test.next_batch(batch_size, mode='silent')
+        predictions.append(model.predict(batch_x.reshape(-1, img_height, img_width, channels)))
     return predictions
+
+
+def get_lr(batch):
+    return lr_starting * (lr_decay ** batch) ** (epoch + 1)
 
 
 data = data.get_data()
@@ -138,33 +140,36 @@ for epoch in range(num_epochs):
     number_of_batches = data.test.get_number_of_batches(batch_size)
     for i in range(number_of_batches):
         op_start_time = time.time()
-        batch_x, batch_y = data.test.next_batch(batch_size)
+        batch_x, batch_y = data.test.next_batch(batch_size, mode='silent')
         model.train_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
 
         # Log (log :)) loss, current position and times
-        op_time, overall_h, overall_m, overall_s = get_times(op_start_time, start_time)
+        op_time, h, m, s = get_times(op_start_time, start_time)
         if (i + 1) % 50 == 0:
             loss = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
-            logger.color_print(logger.Info,
-                               'epoch {0} | batch {1} / {2} | loss: {3:.2f} | {4:.2f}s | {5:02d}:{6:02d}:{7:02d}'
-                               .format(epoch + 1, i + 1, number_of_batches, loss, op_time, overall_h, overall_m, overall_s))
+            lr = get_lr(i + 1)
+            logger.color_print(logger.Bold,
+                        'epoch {} | batch {}/{} | loss: {:.2f} | lr: {:.4E} | {:.2f}s | {:02d}:{:02d}:{:02d}'
+                               .format(epoch + 1, i + 1, number_of_batches, loss, lr, op_time, h, m, s))
         else:
-            print('epoch {0} | batch {1} / {2} | {3:.2f}s | {4:02d}:{5:02d}:{6:02d}'
-                  .format(epoch + 1, i + 1, number_of_batches, op_time, overall_h, overall_m, overall_s))
+            print('epoch {} | batch {}/{} | {:.2f}s | {:02d}:{:02d}:{:02d}'
+                  .format(epoch + 1, i + 1, number_of_batches, op_time, h, m, s))
 
     # Approximate train log score with ~1/4 dataset size for efficiency
-    evaluate(data.train, iter_limit=data.train.get_number_of_batches(batch_size) // 4)
-    evaluate(data.valid)
+    evaluate(data.train, data.train.get_number_of_batches(batch_size) // 4)
+    evaluate(data.valid, data.valid.get_number_of_batches(batch_size))
 
-    current_lr = lr_starting * (lr_decay ** data.train.get_number_of_batches(batch_size)) ** (epoch + 1)
-    logger.color_print(logger.Info, 'Current learning rate: {}'.format(current_lr))
-    score_data['lr'] += [current_lr]
+    score_data['lr'] += [get_lr(data.train.get_number_of_batches(batch_size))]
     score_data['f1_score'] += [0]   # TODO
 
-    #plot_training_progress(score_data)  # TODO
-    save_scores(score_data, scores_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
-    model.save(save_model_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
-    save_prediction(data, batched_predict, predicts_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay))
-    logger.dump(session_path)
+    scores_path = scores_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)
+    print('Saving scores (train/valid loss, lr and f1-score) to {}'.format(scores_path))
+    save_scores(score_data, scores_path)
+    save_model_path = save_model_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)
+    print('Saving current model state with all parameters to {}'.format(save_model_path))
+    model.save(save_model_path)
+    predicts_path = predicts_template.format(epoch, batch_size, opt_name, lr_starting, lr_decay)
+    print('Making prediction using current model and saving it to {}'.format(predicts_path))
+    save_prediction(data, batched_predict, predicts_path)
 
-evaluate(data.test)
+evaluate(data.test, data.test.get_number_of_batches(batch_size))

@@ -21,7 +21,7 @@ class Logger:
     Underline = '\033[4m'
     ENDC = '\033[0m'
 
-    def __init__(self, batch_size, epochs):
+    def __init__(self, batch_size, epochs, lr):
         """
         Creates instance of Logger, but also creates and keeps first
         log line containing general session information.
@@ -30,7 +30,8 @@ class Logger:
         :param epochs:
         :return:
         """
-        first_line = 'Batch size: {} | Epochs: {} | Started: {}\n'.format(batch_size, epochs, time.strftime("%H:%M:%S"))
+        first_line = 'Batch size: {} | Epochs: {} | Learning rate: {} | Started: {}\n'\
+            .format(batch_size, epochs, lr, time.strftime("%H:%M:%S"))
         self.log_lines = [first_line]
 
     def color_print(self, type, msg):
@@ -71,12 +72,13 @@ def save_scores(data, scores_path):
     """
     with open(scores_path, 'a') as fscores:
         for i in range(len(data['train_loss'])):
-            fscores.write('{} | {} | {} | {} | {}\n'
+            fscores.write('{} | {} | {} | {} | {:.4E}\n'
                           .format(i, data['train_loss'][i], data['valid_loss'][i], data['f1_score'][i], data['lr'][i]))
 
 
 def plot_training_progress(data):
     """
+    # TODO
     This doesn't work for me when I run the whole thing in terminal,
     but can be used separately to plot data saved with :func:`save_scores`
 
@@ -113,5 +115,5 @@ def plot_training_progress(data):
 
 
 def save_prediction(data, predict, prediction_path):
-    with open(prediction_path) as fprediction:
+    with open(prediction_path, 'a') as fprediction:
         fprediction.write(str(predict(data)))
