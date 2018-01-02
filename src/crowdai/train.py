@@ -1,3 +1,4 @@
+from keras import metrics
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, ELU, GRU
 from keras.layers import ZeroPadding2D, Conv2D, MaxPooling2D
@@ -5,6 +6,7 @@ from keras.layers import BatchNormalization, Reshape
 from keras.optimizers import SGD, Adam
 
 import time
+import numpy as np
 
 import data
 from melspec import get_times
@@ -34,7 +36,7 @@ score_data['valid_loss'] = []
 score_data['f1_score'] = []
 score_data['lr'] = []
 
-optimizers = {'sgd': SGD(lr=0.001, momentum=0.9, nesterov=True),
+optimizers = {'sgd': SGD(lr=0.001, momentum=0.9),
               'adam': Adam(lr=lr_starting, decay=lr_decay)}
 
 
@@ -88,17 +90,20 @@ def build_model(output_size):
 
 def batched_evaluate(dataset, samples):
     loss = 0
+    acc = 0
     for _ in range(samples):
         batch_x, batch_y = dataset.next_batch(batch_size, mode='silent')
-        loss += model.test_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
-    return loss
+        loss_, acc_ = model.test_on_batch(batch_x.reshape(-1, img_height, img_width, channels), batch_y)
+        loss += loss_
+        acc += acc_
+    return loss, acc
 
 
 def evaluate(data, samples):
     logger.color_print(logger.Bold, '\n-------\nEvaluating {} score ({} samples)...'.format(data.dataset_label, samples))
     op_start_time = time.time()
     # Using batches to evaluate as it's intensive to load the whole set at once
-    loss = batched_evaluate(data, samples) / samples
+    loss, acc = batched_evaluate(data, samples) / samples
 
     op_time, h, m, s = get_times(op_start_time, start_time)
     logger_level = logger.Bold
@@ -107,8 +112,8 @@ def evaluate(data, samples):
     else:
         logger_level = logger.Success
     logger.color_print(logger_level,
-                       '\n-------\nepoch {} | {}_loss: {:.2f} | {:.2f}s | {:02d}:{:02d}:{:02d}\n-------\n'
-                       .format(epoch + 1, data.dataset_label, loss, op_time, h, m, s))
+                      '\n-------\nepoch {} | {}_loss: {:.2f} | acc: {:.2f} | {:.2f}s | {:02d}:{:02d}:{:02d}\n-------\n'
+                       .format(epoch + 1, data.dataset_label, loss, acc, op_time, h, m, s))
     logger.dump(session_path)
 
 
@@ -120,11 +125,12 @@ data = data.get_data()
 
 model = build_model(data.number_of_classes)
 
-opt_name = 'adam'
+opt_name = 'sgd'
 optimizer = optimizers[opt_name]
 
 print('Compiling model...')
-model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=[metrics.categorical_accuracy])
+print('Model metrics: {}'.format(model.metrics_names))
 
 for epoch in range(num_epochs):
     data.train.shuffle()
@@ -137,11 +143,11 @@ for epoch in range(num_epochs):
         # Log (log :)) loss, current position and times
         op_time, h, m, s = get_times(op_start_time, start_time)
         if (i + 1) % 50 == 0:
-            loss = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
+            loss, acc = model.evaluate(batch_x.reshape(-1, img_height, img_width, channels), batch_y, batch_size)
             lr = get_lr(i + 1)
             logger.color_print(logger.Bold,
-                        'epoch {} | batch {}/{} | loss: {:.2f} | lr: {:.4E} | {:.2f}s | {:02d}:{:02d}:{:02d}'
-                               .format(epoch + 1, i + 1, number_of_batches, loss, lr, op_time, h, m, s))
+                              'epoch {} | batch {}/{} | loss: {:.2f} | acc: {} | lr: {:.4E} | {:.2f}s | {:02d}:{:02d}:{:02d}'
+                               .format(epoch + 1, i + 1, number_of_batches, loss, acc, lr, op_time, h, m, s))
         else:
             print('epoch {} | batch {}/{} | {:.2f}s | {:02d}:{:02d}:{:02d}'
                   .format(epoch + 1, i + 1, number_of_batches, op_time, h, m, s))
