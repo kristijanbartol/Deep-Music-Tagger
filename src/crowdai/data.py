@@ -61,6 +61,8 @@ class SplitData:
         self.track_ids = track_ids
         self.labels = self._create_output_vector(y_top)
         self.dataset_label = dataset_label
+        self.dataset_size = self.track_ids.shape[0]
+        self.indices = []
 
     def _create_output_vector(self, y_top):
         """
@@ -99,13 +101,16 @@ class SplitData:
         """
         return self._load_images(self.track_ids), self.labels
 
+    def limit_dataset_size(self, limit):
+        self.dataset_size = limit
+
     def get_number_of_batches(self, batch_size):
         """
         :return number_of_batches:
         """
-        return int(math.ceil(self.track_ids.shape[0] / batch_size))
+        return int(math.ceil(self.dataset_size / batch_size))
 
-    def next_batch(self, batch_size, mode):
+    def next_batch(self, batch_size, mode=None):
         """
         Takes subset of input and output for interval
         (current_idx : current_idx + batch_size).
@@ -113,12 +118,12 @@ class SplitData:
         :param batch_size:
         :return batch_images, batch_labels:
         """
-        if self.current_sample_idx + batch_size >= self.track_ids.shape[0]:  # edge case when latter index is overflown
+        if self.current_sample_idx + batch_size >= self.dataset_size:  # edge case when latter index is overflown
             filling_ids = random.sample(range(self.current_sample_idx),
-                                        batch_size - (self.track_ids.shape[0] - self.current_sample_idx))
+                                        batch_size - (self.dataset_size - self.current_sample_idx))
             batch_images = self._load_images(
-                self.track_ids[list(range(self.current_sample_idx, self.track_ids.shape[0])) + filling_ids], mode)
-            batch_labels = self.labels[list(range(self.current_sample_idx, self.labels.shape[0])) + filling_ids]
+                self.track_ids[list(range(self.current_sample_idx, self.dataset_size)) + filling_ids], mode)
+            batch_labels = self.labels[list(range(self.current_sample_idx, self.dataset_size)) + filling_ids]
             self.current_sample_idx = 0
         else:
             batch_images = self._load_images(
@@ -129,11 +134,11 @@ class SplitData:
         return batch_images, batch_labels
 
     def shuffle(self):
-        indices = np.arange(self.track_ids.shape[0])
-        np.random.shuffle(indices)
+        self.indices = np.arange(self.track_ids.shape[0])
+        np.random.shuffle(self.indices)
 
-        self.track_ids = self.track_ids[indices]
-        self.labels = self.labels[indices]
+        self.track_ids = self.track_ids[self.indices]
+        self.labels = self.labels[self.indices]
 
 
 def get_data():
