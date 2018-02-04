@@ -78,6 +78,10 @@ class SplitData:
 
         return np.eye(MultiClassDataset.number_of_classes)[_transform_idx(y_top)]
 
+    @staticmethod
+    def normalize(matrix):
+        return (matrix / np.max(matrix)) * 2 - 1
+
     def _load_images(self, track_ids, mode=None):
         """
         Private method for actual loading spectrogram data.
@@ -90,7 +94,8 @@ class SplitData:
             fpath = spectr_template.format(track_id[:3] + '/' + track_id + '.png')
             if mode != 'silent':
                 print('Loading spectrogram: {} ({})'.format(fpath, self.dataset_label))
-            images.append(np.asarray(Image.open(fpath).getdata()).reshape(img_width, img_height))
+            images.append(self.normalize(np.asarray(Image.open(fpath).getdata()).reshape(img_height, img_width)))
+        print('images: {}'.format(images[0].shape))
         return np.array(images)
 
     def load_all(self):
