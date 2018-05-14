@@ -1,5 +1,11 @@
 # Deep Music Classifier
 
+## Note
+
+I plan to finish and upgrade this project as soon as possible. Still I haven't run any complete training procedure, but after I do and verify it, the plan is to use this specific classifier for music generation based on genre, which, to the best of my knowledge, still hasn't been done.
+
+If you need assistance running the project or have a question, please email me on kristijan.bartol@gmail.com
+
 ## About
 
 The ideal goal of this project is to be able to say "This part of the song has the elements of jazz, progressive rock and a bit of grunge.". This could be possible to achieve defining the problem as multi-output classification.
