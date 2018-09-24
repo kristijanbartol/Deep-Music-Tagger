@@ -2,7 +2,7 @@
 
 ## Note
 
-I plan to finish and upgrade this project as soon as possible. Still I haven't run any complete training procedure, but after I do and verify it, the plan is to use this specific classifier for music generation based on genre, which, to the best of my knowledge, still hasn't been done.
+Still I haven't run any complete training procedure, but after I do and verify it, the plan is to use this specific classifier for music generation based on genre, which, to the best of my knowledge, still hasn't been done.
 
 If you need assistance running the project or have a question, please email me on kristijan.bartol@gmail.com
 
