@@ -117,3 +117,5 @@ def plot_training_progress(data):
 def save_prediction(data, predict, prediction_path):
     with open(prediction_path, 'w') as fprediction:
         fprediction.write(str(predict(data)))
+
+
